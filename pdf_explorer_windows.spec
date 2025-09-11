@@ -6,7 +6,7 @@ import os
 current_dir = os.path.dirname(os.path.abspath('pdf_explorer_app.py'))
 
 a = Analysis(
-    ['pdf_explorer_app.py'],
+    ['pdf_explorer_windows.py'],
     pathex=[current_dir],
     binaries=[],
     datas=[
@@ -43,7 +43,7 @@ exe = EXE(
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=True,  # Enable console for browser opening
+    console=False,  # Hide console window for end users
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,

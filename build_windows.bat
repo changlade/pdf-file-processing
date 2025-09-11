@@ -35,7 +35,7 @@ echo ✅ PyInstaller installed
 echo.
 
 REM Build the Windows executable
-echo 🔨 Building Windows executable...
+echo 🔨 Building Windows executable (No Console Version)...
 %PYTHON_CMD% -m PyInstaller --noconfirm pdf_explorer_windows.spec
 
 if errorlevel 1 (
@@ -47,6 +47,7 @@ if errorlevel 1 (
 echo.
 echo ✅ Build completed successfully!
 echo 📁 The executable is located in: dist\PDF Document Explorer.exe
+echo 🔇 No console window will appear when double-clicked
 echo.
 echo 🎉 You can now distribute this single .exe file!
 echo    Users just need to double-click it to run the PDF Explorer.

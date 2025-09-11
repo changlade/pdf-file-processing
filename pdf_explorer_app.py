@@ -110,10 +110,10 @@ class PDFExplorerApp:
         
         # Use threading timer for delayed browser opening (best practice for packaged apps)
         import threading
-        timer = threading.Timer(1.5, delayed_open)  # 1.5 second delay
+        timer = threading.Timer(0.5, delayed_open)  # Reduced to 0.5 second delay
         timer.start()
         
-        print("🔄 Browser will open automatically in 1.5 seconds...")
+        print("🔄 Browser will open automatically in 0.5 seconds...")
         return True  # Assume success since we're using timer
     
     def show_error(self, message):
@@ -184,8 +184,8 @@ class PDFExplorerApp:
         
         print(f"✅ Server started successfully on port {self.port}")
         
-        # Wait a moment for server to be ready
-        time.sleep(2)
+        # Brief wait for server to be ready (reduced from 2 seconds)
+        time.sleep(0.3)
         
         # Open browser
         print("🌐 Opening browser...")

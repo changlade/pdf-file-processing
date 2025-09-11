@@ -26,7 +26,7 @@ echo "✅ PyInstaller installed"
 echo ""
 
 # Build the macOS application
-echo "🔨 Building macOS application..."
+echo "🔨 Building macOS application (No Console Version)..."
 python3 -m PyInstaller --noconfirm pdf_explorer.spec
 
 if [ $? -ne 0 ]; then
@@ -37,6 +37,7 @@ fi
 echo ""
 echo "✅ Build completed successfully!"
 echo "📁 The application is located in: dist/PDF Document Explorer.app"
+echo "🔇 No console window will appear when double-clicked"
 echo ""
 echo "🎉 You can now distribute this .app bundle!"
 echo "   Users just need to double-click it to run the PDF Explorer."

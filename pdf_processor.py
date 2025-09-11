@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Optimized PDF Content Extraction Script
+PDF Content Extraction Script
 Reads a PDF file, extracts content with page numbers, and stores in JSON format.
-Optimized for large files with streaming and memory-efficient processing.
+Uses streaming and memory-efficient processing for large files.
 """
 
 import json
@@ -15,7 +15,7 @@ from datetime import datetime
 import PyPDF2
 
 
-class OptimizedPDFExtractor:
+class PDFExtractor:
     """Memory-efficient PDF content extractor"""
     
     def __init__(self, pdf_path: str, output_path: str = "pdf_content.json"):
@@ -166,18 +166,18 @@ class OptimizedPDFExtractor:
 
 
 def main():
-    """Main function to run the optimized PDF extractor"""
+    """Main function to run the PDF extractor"""
     import argparse
     
-    parser = argparse.ArgumentParser(description='Extract content from PDF file and store in JSON format (optimized)')
+    parser = argparse.ArgumentParser(description='Extract content from PDF file and store in JSON format')
     parser.add_argument('pdf_path', help='Path to the PDF file to extract')
-    parser.add_argument('--output', '-o', default='pdf_content_optimized.json', 
-                       help='Output JSON file path (default: pdf_content_optimized.json)')
+    parser.add_argument('--output', '-o', default='pdf_content.json', 
+                       help='Output JSON file path (default: pdf_content.json)')
     
     args = parser.parse_args()
     
     # Extract the document
-    extractor = OptimizedPDFExtractor(args.pdf_path, args.output)
+    extractor = PDFExtractor(args.pdf_path, args.output)
     extractor.extract_and_save_streaming()
     
     # Load and display summary

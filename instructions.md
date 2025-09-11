@@ -1,6 +1,6 @@
 write a python code that reads the pdf file attached and store the content and page numbers in a pickle file. You can use Spark.
 
-build a simple web front end with a single page to explore my pdf document.
+build a simple web front end with a single page to explore my pdf document. It should run as a local app on port 8000
 The page is divided in 2 parts. On the right side of the screen, it shows the pdf file "jugement". This file is scrollable and it should be easy to navigate its pages.
 The left side of the screen is a panel where blocks of text are displayed. Those blocks are all the block of text from the pdf that contains references to CAR, formatted this way: CAR-OTP-xxxx-xxxx, les CAR-D29-xxxx-xxxx et les CAR-V45-xxxx-xxxx. Add a filter to this left panel to filter on any CAR reference that you will find in the document. If there is multiple CAR references for 1 CAR, display multiple blocks of text, that are scrollable. Clicking on one of these blocks should update the pdf view to point on this block, and highlight it. Use the json file available to extract those CAR references and put it in another JSON
 

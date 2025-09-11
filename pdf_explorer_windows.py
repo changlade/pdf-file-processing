@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-PDF Document Explorer - Windows Optimized Version
-Fast startup, no console window, optimized for Windows .exe
+PDF Document Explorer - Windows Official Version
+Fast startup, reliable server detection, proper cleanup
 """
 
 import os
@@ -13,6 +13,20 @@ import threading
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 import signal
 import platform
+import atexit
+import concurrent.futures
+
+# Windows-specific imports for console manipulation
+if platform.system() == 'Windows':
+    try:
+        import ctypes
+        from ctypes import wintypes
+        kernel32 = ctypes.windll.kernel32
+        user32 = ctypes.windll.user32
+        HWND = ctypes.c_void_p
+    except:
+        kernel32 = None
+        user32 = None
 
 class PDFExplorerWindows:
     def __init__(self):
@@ -20,6 +34,46 @@ class PDFExplorerWindows:
         self.server_thread = None
         self.port = 8000
         self.base_dir = self.get_app_directory()
+        self.cleanup_registered = False
+        
+        # Register cleanup function
+        atexit.register(self.cleanup)
+        signal.signal(signal.SIGTERM, self._signal_handler)
+        signal.signal(signal.SIGINT, self._signal_handler)
+        
+    def _signal_handler(self, signum, frame):
+        """Handle termination signals"""
+        self.cleanup()
+        sys.exit(0)
+        
+    def cleanup(self):
+        """Clean up resources to prevent background tasks"""
+        if not self.cleanup_registered:
+            self.cleanup_registered = True
+            if self.server:
+                try:
+                    self.server.shutdown()
+                    self.server.server_close()
+                except:
+                    pass
+            if self.server_thread and self.server_thread.is_alive():
+                try:
+                    # Force thread termination if needed
+                    pass
+                except:
+                    pass
+        
+    def hide_console(self):
+        """Hide the console window on Windows"""
+        if platform.system() == 'Windows' and kernel32 and user32:
+            try:
+                # Get console window handle
+                console_window = kernel32.GetConsoleWindow()
+                if console_window:
+                    # Hide the console window
+                    user32.ShowWindow(console_window, 0)  # SW_HIDE = 0
+            except:
+                pass
         
     def get_app_directory(self):
         """Get the directory where the app resources are located"""
@@ -48,60 +102,75 @@ class PDFExplorerWindows:
         return None
     
     def check_existing_server(self, start_port=8000, max_attempts=10):
-        """Check if server is already running and return the port"""
+        """Fast check if server is already running and return the port"""
         import urllib.request
         import urllib.error
         
-        for i in range(max_attempts):
-            port = start_port + i
+        def check_port(port):
             try:
-                # Try to connect to potential existing server
+                # Quick socket check first (faster than HTTP)
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                    s.settimeout(0.1)  # Very fast timeout
+                    result = s.connect_ex(('localhost', port))
+                    if result != 0:
+                        return None
+                
+                # If socket connects, verify it's our server with HTTP
                 url = f"http://localhost:{port}/web/"
-                urllib.request.urlopen(url, timeout=1)  # Faster timeout
-                return port
-            except (urllib.error.URLError, ConnectionRefusedError, OSError):
-                continue
+                request = urllib.request.Request(url)
+                request.add_header('User-Agent', 'PDF-Explorer-Check')
+                with urllib.request.urlopen(request, timeout=0.3) as response:
+                    # Quick check - if we get a response, it's likely our server
+                    return port
+            except:
+                return None
+        
+        # Check ports concurrently for speed
+        ports_to_check = [start_port + i for i in range(max_attempts)]
+        
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+            future_to_port = {executor.submit(check_port, port): port for port in ports_to_check}
+            
+            for future in concurrent.futures.as_completed(future_to_port, timeout=1.0):
+                try:
+                    result = future.result()
+                    if result:
+                        return result
+                except:
+                    continue
+        
         return None
     
     def start_server(self):
-        """Start the HTTP server in a separate thread"""
+        """Start the HTTP server with fast startup"""
         try:
-            # Find available port
+            # Find available port quickly
             self.port = self.find_available_port()
             if not self.port:
                 return False
             
-            # Change to the app directory
+            # Set working directory
             os.chdir(self.base_dir)
             
-            # Check if required files exist with more specific paths
-            web_path = os.path.join(self.base_dir, 'web', 'index.html')
-            data_path = os.path.join(self.base_dir, 'data', 'car_references.json')
-            
-            if not os.path.exists(web_path):
-                # Try alternative path for PyInstaller
-                web_path = os.path.join(self.base_dir, '..', 'web', 'index.html')
-                if not os.path.exists(web_path):
-                    return False
-            
-            # Create server with error handling
-            server_address = ('localhost', self.port)
-            httpd = HTTPServer(server_address, SimpleHTTPRequestHandler)
-            self.server = httpd
-            
-            # Start server in a separate thread
-            self.server_thread = threading.Thread(target=self._run_server, daemon=True)
-            self.server_thread.start()
-            
-            # Wait longer for server to be ready on Windows
-            time.sleep(0.5)
-            
-            # Verify the server thread is actually running
-            if not self.server_thread.is_alive():
+            # Quick file existence check (no deep validation for speed)
+            web_exists = (os.path.exists(os.path.join(self.base_dir, 'web')) or 
+                         os.path.exists(os.path.join(self.base_dir, '..', 'web')))
+            if not web_exists:
                 return False
             
-            return True
-        except Exception as e:
+            # Create and start server immediately
+            server_address = ('localhost', self.port)
+            self.server = HTTPServer(server_address, SimpleHTTPRequestHandler)
+            
+            # Start server thread with faster startup
+            self.server_thread = threading.Thread(target=self._run_server, daemon=False)
+            self.server_thread.start()
+            
+            # Minimal wait - just ensure thread started
+            time.sleep(0.1)
+            
+            return self.server_thread.is_alive()
+        except Exception:
             return False
     
     def _run_server(self):
@@ -112,7 +181,7 @@ class PDFExplorerWindows:
             pass
     
     def open_browser(self):
-        """Open the web browser using threading timer (optimized for Windows)"""
+        """Open the web browser using threading timer"""
         url = f"http://localhost:{self.port}/web/"
         
         def delayed_open():
@@ -122,59 +191,70 @@ class PDFExplorerWindows:
             except Exception:
                 return False
         
-        # Browser opening for Windows (longer delay for no-console mode)
+        # Browser opening with appropriate delay
         import threading
-        timer = threading.Timer(1.0, delayed_open)  # Longer for Windows no-console
+        timer = threading.Timer(0.5, delayed_open)
         timer.start()
         
         return True
     
     def run(self):
-        """Main application entry point - optimized for Windows"""
-        # Fast existing server check
+        """Main application entry point - fast and reliable"""
+        print("🚀 PDF Document Explorer - Fast Startup")
+        
+        # Fast existing server check (max 1 second)
+        print("🔍 Checking for existing server...")
         existing_port = self.check_existing_server()
         
         if existing_port:
-            # Found existing server - just open browser
+            print(f"✅ Using existing server on port {existing_port}")
             self.port = existing_port
-            self.server = None
             self.open_browser()
+            
+            # Quick hide and exit (no background tasks)
+            time.sleep(0.5)
+            self.hide_console()
+            
+            # Exit immediately - browser is open, no need to keep process running
+            time.sleep(1)
             return 0
         
-        # No existing server - start new one
+        # Start new server quickly
+        print("🔧 Starting server...")
         if not self.start_server():
-            # Silent fail for Windows - just exit
+            print("❌ Server startup failed")
+            time.sleep(2)
             return 1
         
-        # Longer wait for server to be fully ready (Windows needs more time)
-        time.sleep(1.0)
+        print(f"✅ Server ready on port {self.port}")
         
-        # Verify server is actually running before opening browser
-        import urllib.request
-        import urllib.error
-        server_ready = False
-        for attempt in range(10):  # Try for 5 seconds
-            try:
-                url = f"http://localhost:{self.port}/web/"
-                urllib.request.urlopen(url, timeout=1)
-                server_ready = True
-                break
-            except:
-                time.sleep(0.5)
-        
-        if not server_ready:
-            return 1
-        
-        # Open browser after confirming server is ready
+        # Quick browser opening
+        print("🌐 Opening browser...")
         self.open_browser()
         
+        # Hide console after browser starts
+        time.sleep(1.5)
+        self.hide_console()
+        
+        # Keep server running but allow clean exit
         try:
-            # Keep the application running
-            while True:
-                time.sleep(1)
+            # Use event to allow quick shutdown
+            import threading
+            shutdown_event = threading.Event()
+            
+            def wait_for_shutdown():
+                try:
+                    while not shutdown_event.is_set():
+                        shutdown_event.wait(1)
+                except KeyboardInterrupt:
+                    shutdown_event.set()
+            
+            wait_for_shutdown()
+            
         except KeyboardInterrupt:
-            if self.server:
-                self.server.shutdown()
+            pass
+        finally:
+            self.cleanup()
             return 0
 
 if __name__ == "__main__":

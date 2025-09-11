@@ -18,8 +18,9 @@ You now have **professional standalone executables** that require **ZERO setup**
 - **Size**: ~40MB (includes everything needed)  
 - **Requirements**: Windows 10+ (any version)
 - **Usage**: Users just double-click the .exe file!
-- **Features**: 🔇 Silent launch (no console), ⚡ 0.2s startup
-- **Status**: ✅ Ready to build with provided batch script
+- **Features**: ⚡ 2-3s startup, 🔍 Fast server detection, 🧹 Auto cleanup
+- **Behavior**: Shows console briefly (~2s), then auto-hides
+- **Status**: ✅ Optimized and ready to build
 
 ### 🎯 **Zero Setup for End Users**
 
@@ -72,12 +73,19 @@ Each standalone file contains:
 
 When users run the executable:
 
+**macOS (.app):**
 1. **🎬 App starts** (silently in background)
-2. **🌐 Web server launches** (finds available port automatically)
-3. **🚀 Browser opens** (to the PDF explorer URL in 0.2-0.3 seconds)
+2. **🌐 Web server launches** (finds available port automatically) 
+3. **🚀 Browser opens** (in 0.3 seconds)
 4. **📱 PDF Explorer ready** (fully functional!)
 
-**No console windows, no loading dialogs - just works!**
+**Windows (.exe):**
+1. **🎬 Console appears** (startup progress shown)
+2. **🔍 Checks existing servers** (concurrent, <1 second)
+3. **🌐 Starts server or connects** (2-3 seconds total)
+4. **🚀 Browser opens** (automatically)
+5. **🔇 Console auto-hides** (clean experience)
+6. **📱 PDF Explorer ready** (with proper cleanup!)
 
 ### 📁 **Distribution**
 

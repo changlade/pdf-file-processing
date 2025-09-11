@@ -19,7 +19,11 @@ a = Analysis(
         'threading',
         'socket',
         'signal',
-        'platform'
+        'platform',
+        'concurrent.futures',
+        'ctypes',
+        'ctypes.wintypes',
+        'atexit'
     ],
     hookspath=[],
     hooksconfig={},
@@ -42,7 +46,7 @@ exe = EXE(
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=False,  # Hide console window for end users
+    console=True,  # Show console briefly during startup, then hide programmatically
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,

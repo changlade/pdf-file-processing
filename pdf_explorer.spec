@@ -14,7 +14,6 @@ a = Analysis(
         ('data', 'data'),
     ],
     hiddenimports=[
-        'tkinter',
         'http.server',
         'webbrowser',
         'threading',
@@ -25,7 +24,7 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=['tkinter', '_tkinter', 'tkinter.ttk'],
     noarchive=False,
 )
 

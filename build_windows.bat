@@ -36,20 +36,7 @@ echo.
 
 REM Build the Windows executable
 echo 🔨 Building Windows executable...
-%PYTHON_CMD% -m PyInstaller ^
-    --onefile ^
-    --windowed ^
-    --name "PDF Document Explorer" ^
-    --add-data "web;web" ^
-    --add-data "data;data" ^
-    --hidden-import tkinter ^
-    --hidden-import http.server ^
-    --hidden-import webbrowser ^
-    --hidden-import threading ^
-    --hidden-import socket ^
-    --hidden-import signal ^
-    --hidden-import platform ^
-    pdf_explorer_app.py
+%PYTHON_CMD% -m PyInstaller --noconfirm pdf_explorer_windows.spec
 
 if errorlevel 1 (
     echo ❌ Build failed

@@ -2,7 +2,7 @@
 
 ## ✨ **Super Simple Distribution**
 
-You now have **standalone executables** that require **ZERO setup** from your users!
+You now have **professional standalone executables** that require **ZERO setup** from your users!
 
 ### 📱 **What's Available**
 
@@ -13,10 +13,11 @@ You now have **standalone executables** that require **ZERO setup** from your us
 - **Usage**: Users just double-click the .app file!
 
 #### 🖥️ **Windows Executable** 
-- **File**: `dist/PDF Document Explorer.exe` (after building)
+- **File**: `dist/PDF Document Explorer.exe` (after running `build_windows.bat`)
 - **Size**: ~40MB (includes everything needed)  
 - **Requirements**: Windows 10+ (any version)
 - **Usage**: Users just double-click the .exe file!
+- **Status**: ✅ Ready to build with provided batch script
 
 ### 🎯 **Zero Setup for End Users**
 
@@ -30,6 +31,14 @@ They just:
 1. ✅ Download the file for their OS
 2. ✅ Double-click it
 3. ✅ The PDF Explorer opens automatically!
+
+### 🔄 **Smart Server Management**
+
+The app intelligently handles multiple launches:
+- **First launch**: Starts new server and opens browser
+- **Subsequent launches**: Detects existing server and just opens new browser tab
+- **No conflicts**: No more "app not open anymore" errors
+- **Seamless experience**: Users can click the app multiple times safely
 
 ### 🔨 **How to Build the Executables**
 

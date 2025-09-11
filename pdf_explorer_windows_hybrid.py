@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-PDF Document Explorer - Windows Optimized Version
-Fast startup, no console window, optimized for Windows .exe
+PDF Document Explorer - Windows Hybrid Version
+Shows console briefly during startup, then hides it
 """
 
 import os
@@ -14,12 +14,36 @@ from http.server import HTTPServer, SimpleHTTPRequestHandler
 import signal
 import platform
 
+# Windows-specific imports for console manipulation
+if platform.system() == 'Windows':
+    try:
+        import ctypes
+        from ctypes import wintypes
+        kernel32 = ctypes.windll.kernel32
+        user32 = ctypes.windll.user32
+        HWND = ctypes.c_void_p
+    except:
+        kernel32 = None
+        user32 = None
+
 class PDFExplorerWindows:
     def __init__(self):
         self.server = None
         self.server_thread = None
         self.port = 8000
         self.base_dir = self.get_app_directory()
+        
+    def hide_console(self):
+        """Hide the console window on Windows"""
+        if platform.system() == 'Windows' and kernel32 and user32:
+            try:
+                # Get console window handle
+                console_window = kernel32.GetConsoleWindow()
+                if console_window:
+                    # Hide the console window
+                    user32.ShowWindow(console_window, 0)  # SW_HIDE = 0
+            except:
+                pass
         
     def get_app_directory(self):
         """Get the directory where the app resources are located"""
@@ -57,7 +81,7 @@ class PDFExplorerWindows:
             try:
                 # Try to connect to potential existing server
                 url = f"http://localhost:{port}/web/"
-                urllib.request.urlopen(url, timeout=1)  # Faster timeout
+                urllib.request.urlopen(url, timeout=1)
                 return port
             except (urllib.error.URLError, ConnectionRefusedError, OSError):
                 continue
@@ -93,7 +117,7 @@ class PDFExplorerWindows:
             self.server_thread = threading.Thread(target=self._run_server, daemon=True)
             self.server_thread.start()
             
-            # Wait longer for server to be ready on Windows
+            # Wait for server to be ready on Windows
             time.sleep(0.5)
             
             # Verify the server thread is actually running
@@ -112,7 +136,7 @@ class PDFExplorerWindows:
             pass
     
     def open_browser(self):
-        """Open the web browser using threading timer (optimized for Windows)"""
+        """Open the web browser using threading timer"""
         url = f"http://localhost:{self.port}/web/"
         
         def delayed_open():
@@ -122,34 +146,51 @@ class PDFExplorerWindows:
             except Exception:
                 return False
         
-        # Browser opening for Windows (longer delay for no-console mode)
+        # Browser opening with appropriate delay
         import threading
-        timer = threading.Timer(1.0, delayed_open)  # Longer for Windows no-console
+        timer = threading.Timer(0.5, delayed_open)
         timer.start()
         
         return True
     
     def run(self):
-        """Main application entry point - optimized for Windows"""
-        # Fast existing server check
+        """Main application entry point - Windows hybrid approach"""
+        print("🚀 Starting PDF Document Explorer...")
+        
+        # Check for existing server first
         existing_port = self.check_existing_server()
         
         if existing_port:
-            # Found existing server - just open browser
+            print(f"✅ Found existing server on port {existing_port}")
             self.port = existing_port
             self.server = None
             self.open_browser()
-            return 0
+            
+            # Hide console after successful connection
+            time.sleep(1)
+            self.hide_console()
+            
+            # Keep running to maintain the browser connection reference
+            try:
+                while True:
+                    time.sleep(10)
+            except KeyboardInterrupt:
+                return 0
         
         # No existing server - start new one
+        print("🔧 Starting new server...")
         if not self.start_server():
-            # Silent fail for Windows - just exit
+            print("❌ Failed to start server")
+            input("Press Enter to exit...")
             return 1
         
-        # Longer wait for server to be fully ready (Windows needs more time)
+        print(f"✅ Server started on port {self.port}")
+        
+        # Wait for server to be fully ready
+        print("🔄 Waiting for server to be ready...")
         time.sleep(1.0)
         
-        # Verify server is actually running before opening browser
+        # Verify server is actually running
         import urllib.request
         import urllib.error
         server_ready = False
@@ -163,10 +204,20 @@ class PDFExplorerWindows:
                 time.sleep(0.5)
         
         if not server_ready:
+            print("❌ Server not responding")
+            input("Press Enter to exit...")
             return 1
         
-        # Open browser after confirming server is ready
+        print("🌐 Opening browser...")
         self.open_browser()
+        
+        # Wait a moment for browser to start opening
+        time.sleep(2)
+        
+        # Hide console window after successful startup
+        print("✅ Startup complete - hiding console...")
+        time.sleep(1)
+        self.hide_console()
         
         try:
             # Keep the application running

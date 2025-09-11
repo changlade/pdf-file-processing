@@ -65,31 +65,47 @@ class PDFExplorerWindows:
     
     def start_server(self):
         """Start the HTTP server in a separate thread"""
-        # Find available port
-        self.port = self.find_available_port()
-        if not self.port:
-            return False
-        
-        # Change to the app directory
-        os.chdir(self.base_dir)
-        
-        # Check if required files exist
-        if not os.path.exists('web/index.html'):
-            return False
-        
         try:
-            # Create server
+            # Find available port
+            self.port = self.find_available_port()
+            if not self.port:
+                return False
+            
+            # Change to the app directory
+            os.chdir(self.base_dir)
+            
+            # Check if required files exist with more specific paths
+            web_path = os.path.join(self.base_dir, 'web', 'index.html')
+            data_path = os.path.join(self.base_dir, 'data', 'car_references.json')
+            
+            if not os.path.exists(web_path):
+                # Try alternative path for PyInstaller
+                web_path = os.path.join(self.base_dir, '..', 'web', 'index.html')
+                if not os.path.exists(web_path):
+                    return False
+            
+            # Create server with error handling
             server_address = ('localhost', self.port)
             httpd = HTTPServer(server_address, SimpleHTTPRequestHandler)
             self.server = httpd
             
             # Start server in a separate thread
-            self.server_thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+            self.server_thread = threading.Thread(target=self._run_server, daemon=True)
             self.server_thread.start()
             
+            # Brief wait to ensure server started
+            time.sleep(0.2)
+            
             return True
-        except Exception:
+        except Exception as e:
             return False
+    
+    def _run_server(self):
+        """Run the server with error handling"""
+        try:
+            self.server.serve_forever()
+        except Exception:
+            pass
     
     def open_browser(self):
         """Open the web browser using threading timer (optimized for Windows)"""
@@ -123,17 +139,7 @@ class PDFExplorerWindows:
         
         # No existing server - start new one
         if not self.start_server():
-            # Show error dialog for Windows users
-            try:
-                import tkinter as tk
-                from tkinter import messagebox
-                root = tk.Tk()
-                root.withdraw()
-                messagebox.showerror("PDF Document Explorer", 
-                    "Failed to start the application. Please ensure all files are present.")
-                root.destroy()
-            except:
-                pass
+            # Silent fail for Windows - just exit
             return 1
         
         # Very brief wait for server

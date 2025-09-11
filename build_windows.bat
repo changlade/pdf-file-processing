@@ -46,10 +46,10 @@ if errorlevel 1 (
 
 echo.
 echo ✅ Build completed successfully!
-echo 📁 The executable is located in: dist\PDF Document Explorer.exe
+echo 📁 The executable is located in: dist\PDF Document Explorer\PDF Document Explorer.exe
 echo 🔇 No console window will appear when double-clicked
 echo.
-echo 🎉 You can now distribute this single .exe file!
-echo    Users just need to double-click it to run the PDF Explorer.
+echo 🎉 You can now distribute the entire "PDF Document Explorer" folder!
+echo    Users just need to double-click the .exe inside the folder.
 echo.
 pause

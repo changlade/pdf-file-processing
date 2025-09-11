@@ -24,7 +24,7 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=['tkinter', '_tkinter', 'tkinter.ttk'],
+    excludes=['tkinter', '_tkinter', 'tkinter.ttk', 'tk'],
     noarchive=False,
 )
 
@@ -33,9 +33,8 @@ pyz = PYZ(a.pure)
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.datas,
     [],
+    exclude_binaries=True,
     name='PDF Document Explorer',
     debug=False,
     bootloader_ignore_signals=False,
@@ -50,4 +49,15 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
     icon=None,
+)
+
+# Create a COLLECT directory structure for Windows (like macOS)
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.datas,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    name='PDF Document Explorer',
 )

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Page</title>
+</head>
+<body>
+    <h1>Test Page</h1>
+    <p>Server is working!</p>
+    <div id="status">Loading...</div>
+    
+    <script>
+        console.log('JavaScript is working');
+        document.getElementById('status').textContent = 'JavaScript loaded successfully!';
+        
+        // Test JSON loading
+        fetch('./car_references.json')
+            .then(response => {
+                console.log('Fetch response:', response);
+                return response.json();
+            })
+            .then(data => {
+                console.log('JSON loaded successfully, references:', data.extraction_info.unique_references);
+                document.getElementById('status').textContent = 'JSON loaded: ' + data.extraction_info.unique_references + ' references';
+            })
+            .catch(error => {
+                console.error('Error loading JSON:', error);
+                document.getElementById('status').textContent = 'Error: ' + error.message;
+            });
+    </script>
+</body>
+</html>

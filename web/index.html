@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Document Explorer - CAR References</title>
+    
+    <!-- PDF.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf_viewer.min.css">
+    
+    <style>
+        :root {
+            --primary-bg: #ffffff;
+            --secondary-bg: #f8fafc;
+            --tertiary-bg: #f1f5f9;
+            --border-light: #e2e8f0;
+            --border-medium: #cbd5e1;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --accent-blue: #0f172a;
+            --accent-blue-light: #334155;
+            --accent-orange: #ea580c;
+            --accent-orange-light: #fb923c;
+            --success: #059669;
+            --warning: #d97706;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background: var(--secondary-bg);
+            height: 100vh;
+            overflow: hidden;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            position: relative;
+        }
+
+        .left-panel {
+            min-width: 320px;
+            width: 60%;
+            background: var(--primary-bg);
+            border-right: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .resizer {
+            width: 4px;
+            background: var(--border-light);
+            cursor: col-resize;
+            position: relative;
+            z-index: 10;
+            transition: background-color 0.15s ease;
+        }
+
+        .resizer:hover {
+            background: var(--accent-orange);
+        }
+
+        .resizer::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 2px;
+            height: 20px;
+            background: var(--border-medium);
+            border-radius: 1px;
+        }
+
+        .resizer:hover::after {
+            background: white;
+        }
+
+        .right-panel {
+            flex: 1;
+            background: var(--tertiary-bg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-width: 500px;
+        }
+
+        .panel-header {
+            background: var(--accent-blue);
+            color: white;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: -0.025em;
+        }
+
+        .header-icon {
+            font-size: 20px;
+            opacity: 0.9;
+        }
+
+        .header-stats {
+            font-size: 13px;
+            opacity: 0.7;
+            margin-top: 6px;
+            font-weight: 400;
+        }
+
+        .filter-section {
+            padding: 24px;
+            background: var(--primary-bg);
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .filter-input {
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            margin-bottom: 20px;
+            background: var(--primary-bg);
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+            position: relative;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--accent-orange);
+            box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
+        }
+
+        .filter-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 16px;
+            pointer-events: none;
+        }
+
+        .filter-container {
+            position: relative;
+        }
+
+        .reference-count {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+
+        .reference-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            background: var(--primary-bg);
+            padding: 16px;
+        }
+
+        .reference-tag {
+            display: inline-block;
+            background: var(--accent-blue-light);
+            color: white;
+            padding: 6px 12px;
+            margin: 2px;
+            border-radius: var(--radius-sm);
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.15s ease, transform 0.1s ease;
+            letter-spacing: 0.025em;
+        }
+
+        .reference-tag:hover {
+            background: var(--accent-blue);
+            transform: translateY(-1px);
+        }
+
+        .reference-tag.selected {
+            background: var(--accent-orange);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .text-blocks {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            background: var(--secondary-bg);
+        }
+
+        .text-block {
+            background: var(--primary-bg);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .text-block:hover {
+            border-color: var(--accent-orange-light);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+
+        .text-block.highlighted {
+            border-color: var(--accent-orange);
+            background: linear-gradient(to right, #fef3c7, var(--primary-bg));
+            box-shadow: var(--shadow-lg);
+        }
+
+        .block-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            font-size: 12px;
+            color: var(--text-muted);
+            gap: 12px;
+        }
+
+        .page-number {
+            background: var(--text-muted);
+            color: white;
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            font-size: 11px;
+            letter-spacing: 0.025em;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        .block-references {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            flex: 1;
+            justify-content: flex-end;
+            align-items: flex-start;
+        }
+
+        .block-ref-tag {
+            background: var(--success);
+            color: white;
+            padding: 3px 8px;
+            border-radius: var(--radius-sm);
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 0.025em;
+        }
+
+        .block-text {
+            line-height: 1.6;
+            font-size: 14px;
+            color: var(--text-primary);
+            font-weight: 400;
+        }
+
+        /* PDF Viewer Styles */
+        .pdf-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #2d3748;
+        }
+
+        .pdf-toolbar {
+            background: var(--primary-bg);
+            border-bottom: 1px solid var(--border-light);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .pdf-toolbar button {
+            background: var(--accent-blue-light);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: background-color 0.15s ease;
+        }
+
+        .pdf-toolbar button:hover {
+            background: var(--accent-blue);
+        }
+
+        .pdf-toolbar button:disabled {
+            background: var(--border-medium);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .pdf-toolbar input {
+            padding: 6px 10px;
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-sm);
+            width: 70px;
+            text-align: center;
+            font-size: 13px;
+            background: var(--primary-bg);
+        }
+
+        .pdf-toolbar select {
+            padding: 6px 10px;
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+        }
+
+        .toolbar-label {
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .pdf-viewer-container {
+            flex: 1;
+            overflow: auto;
+            background: #2d3748;
+            position: relative;
+        }
+
+        #pdf-viewer {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .pdf-page-canvas {
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-lg);
+            background: white;
+            position: relative;
+            border-radius: var(--radius-sm);
+        }
+
+        /* PDF.js text layer styling for proper text selection */
+        .textLayer {
+            opacity: 0.2; /* Controls text layer opacity (so text is selectable but mostly invisible) */
+            user-select: text;
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+        }
+
+        .textLayer span {
+            cursor: text;
+            transform-origin: 0% 0%; /* avoids scaling glitches */
+            white-space: pre;
+        }
+
+        .textLayer ::selection {
+            background: rgba(0, 0, 255, 0.3); /* Blue highlight */
+        }
+
+        .textLayer ::-moz-selection {
+            background: rgba(0, 0, 255, 0.3);
+        }
+
+        /* Also target our custom text-layer class for compatibility */
+        .text-layer {
+            opacity: 0.2;
+            user-select: text;
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+        }
+
+        .text-layer span {
+            cursor: text;
+            transform-origin: 0% 0%;
+            white-space: pre;
+        }
+
+        .text-layer ::selection {
+            background: rgba(0, 0, 255, 0.3);
+        }
+
+        .text-layer ::-moz-selection {
+            background: rgba(0, 0, 255, 0.3);
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100px;
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .loading::after {
+            content: '';
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border-light);
+            border-top: 2px solid var(--accent-orange);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--text-muted);
+            font-style: italic;
+            background: var(--primary-bg);
+            border-radius: var(--radius-md);
+            margin: 16px;
+            border: 1px solid var(--border-light);
+        }
+
+        .search-highlight {
+            background: var(--warning);
+            color: white;
+            padding: 2px 4px;
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--tertiary-bg);
+            border-radius: var(--radius-sm);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-medium);
+            border-radius: var(--radius-sm);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* Focus styles */
+        .filter-input:focus,
+        .pdf-toolbar input:focus,
+        .pdf-toolbar select:focus,
+        .pdf-toolbar button:focus {
+            outline: 2px solid var(--accent-orange);
+            outline-offset: 2px;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .left-panel {
+                width: 100%;
+                max-height: 50vh;
+            }
+            
+            .resizer {
+                height: 4px;
+                width: 100%;
+                cursor: row-resize;
+            }
+            
+            .resizer::after {
+                width: 20px;
+                height: 2px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Left Panel: Reference Browser -->
+        <div class="left-panel">
+            <div class="panel-header">
+                <div class="header-title">
+                    <span class="header-icon">📄</span>
+                    CAR References Explorer
+                </div>
+                <div class="header-stats" id="headerStats">
+                    Loading document references...
+                </div>
+            </div>
+            
+            <div class="filter-section">
+                <div class="filter-container">
+                    <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" class="filter-input" 
+                           placeholder="Search CAR references (e.g., CAR-D29, CAR-OTP, CAR-V45)...">
+                </div>
+                
+                <div class="reference-count" id="referenceCount">
+                    Loading references...
+                </div>
+                
+                <div class="reference-list" id="referenceList">
+                    <!-- Reference tags will be populated here -->
+                </div>
+            </div>
+            
+            <div class="text-blocks" id="textBlocks">
+                <div class="loading">Loading text blocks</div>
+            </div>
+        </div>
+
+        <!-- Resizer -->
+        <div class="resizer" id="resizer"></div>
+
+        <!-- Right Panel: PDF Viewer -->
+        <div class="right-panel">
+            <div class="panel-header">
+                <div class="header-title">
+                    <span class="header-icon">📖</span>
+                    PDF Document: <span id="documentTitle">Jugement ICC</span>
+                </div>
+                <div class="header-stats" id="pdfStats">
+                    Loading PDF...
+                </div>
+            </div>
+            
+            <div class="pdf-container">
+                <div class="pdf-toolbar">
+                    <button id="prev-page">◀ Previous</button>
+                    <button id="next-page">Next ▶</button>
+                    <span class="toolbar-label">Page: 
+                        <input type="number" id="page-num" value="1" min="1">
+                        of <span id="page-count">-</span>
+                    </span>
+                    <button id="zoom-out">Zoom Out</button>
+                    <select id="zoom-select">
+                        <option value="0.5">50%</option>
+                        <option value="0.75">75%</option>
+                        <option value="1.0">100%</option>
+                        <option value="1.25" selected>125%</option>
+                        <option value="1.5">150%</option>
+                        <option value="2.0">200%</option>
+                        <option value="auto">Auto Fit</option>
+                        <option value="page-width">Fit Width</option>
+                    </select>
+                    <button id="zoom-in">Zoom In</button>
+                </div>
+                
+                <div class="pdf-viewer-container">
+                    <div id="pdf-viewer">
+                        <div class="loading">Loading PDF viewer</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+    <script>
+        // Global variables
+        let referencesData = null;
+        let pdfData = null;
+        let pdfDoc = null;
+        let currentFilter = '';
+        let selectedReference = null;
+        let highlightedBlockId = null;
+        let isResizing = false;
+        let currentPage = 1;
+        let totalPages = 0;
+        let currentZoom = 1.25;
+
+        // PDF.js will be configured when loading the PDF
+
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            setupEventListeners();
+            setupResizer();
+            setupPDFControls();
+        });
+
+        function setupEventListeners() {
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', function() {
+                currentFilter = this.value.toLowerCase();
+                filterReferences();
+                updateTextBlocks();
+            });
+        }
+
+        function setupPDFControls() {
+            document.getElementById('prev-page').addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderPage(currentPage);
+                    updatePageNum();
+                }
+            });
+
+            document.getElementById('next-page').addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderPage(currentPage);
+                    updatePageNum();
+                }
+            });
+
+            document.getElementById('page-num').addEventListener('change', function() {
+                const pageNum = parseInt(this.value);
+                if (pageNum >= 1 && pageNum <= totalPages) {
+                    currentPage = pageNum;
+                    renderPage(currentPage);
+                } else {
+                    this.value = currentPage;
+                }
+            });
+
+            document.getElementById('zoom-out').addEventListener('click', () => {
+                currentZoom = Math.max(0.25, currentZoom - 0.25);
+                document.getElementById('zoom-select').value = currentZoom;
+                renderPage(currentPage);
+            });
+
+            document.getElementById('zoom-in').addEventListener('click', () => {
+                currentZoom = Math.min(3.0, currentZoom + 0.25);
+                document.getElementById('zoom-select').value = currentZoom;
+                renderPage(currentPage);
+            });
+
+            document.getElementById('zoom-select').addEventListener('change', function() {
+                const value = this.value;
+                if (value === 'auto' || value === 'page-width') {
+                    // Handle auto-fit later
+                    currentZoom = 1.0;
+                } else {
+                    currentZoom = parseFloat(value);
+                }
+                renderPage(currentPage);
+            });
+        }
+
+        function setupResizer() {
+            const resizer = document.getElementById('resizer');
+            const leftPanel = document.querySelector('.left-panel');
+            const container = document.querySelector('.container');
+
+            resizer.addEventListener('mousedown', function(e) {
+                isResizing = true;
+                document.addEventListener('mousemove', handleResize);
+                document.addEventListener('mouseup', stopResize);
+                e.preventDefault();
+            });
+
+            function handleResize(e) {
+                if (!isResizing) return;
+                
+                const containerRect = container.getBoundingClientRect();
+                const newWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+                
+                // Constrain between 30% and 80%
+                const constrainedWidth = Math.max(30, Math.min(80, newWidth));
+                leftPanel.style.width = constrainedWidth + '%';
+            }
+
+            function stopResize() {
+                isResizing = false;
+                document.removeEventListener('mousemove', handleResize);
+                document.removeEventListener('mouseup', stopResize);
+            }
+        }
+
+        async function loadData() {
+            try {
+                // Load references data
+                const referencesResponse = await fetch('../data/car_references.json');
+                referencesData = await referencesResponse.json();
+                
+                console.log('Loaded references data:', {
+                    references: referencesData.extraction_info.unique_references,
+                    blocks: referencesData.extraction_info.total_reference_blocks
+                });
+                
+                // Load PDF
+                await loadPDF();
+                
+                // Initialize the interface
+                initializeInterface();
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showError('Failed to load data files. Make sure the data folder contains car_references.json and jugement.pdf');
+            }
+        }
+
+        async function loadPDF() {
+            try {
+                // Set PDF.js worker
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                
+                const pdfUrl = './jugement.pdf';
+                console.log('Loading PDF from:', pdfUrl);
+                
+                pdfDoc = await pdfjsLib.getDocument(pdfUrl).promise;
+                totalPages = pdfDoc.numPages;
+                
+                document.getElementById('page-count').textContent = totalPages;
+                
+                // Render first page
+                await renderPage(1);
+                
+                console.log('PDF loaded successfully:', {
+                    pages: totalPages,
+                    title: pdfDoc.title || 'Jugement ICC'
+                });
+                
+            } catch (error) {
+                console.error('Error loading PDF:', error);
+                
+                // Try alternative path
+                try {
+                    const altPdfUrl = '../data/jugement.pdf';
+                    console.log('Trying alternative PDF path:', altPdfUrl);
+                    
+                    pdfDoc = await pdfjsLib.getDocument(altPdfUrl).promise;
+                    totalPages = pdfDoc.numPages;
+                    
+                    document.getElementById('page-count').textContent = totalPages;
+                    await renderPage(1);
+                    
+                    console.log('PDF loaded from alternative path:', {
+                        pages: totalPages
+                    });
+                    
+                } catch (altError) {
+                    console.error('Failed to load PDF from both paths:', altError);
+                    showError('Failed to load PDF file. Make sure jugement.pdf is in the correct location.');
+                }
+            }
+        }
+
+        async function renderPage(pageNumber) {
+            if (!pdfDoc) {
+                console.error('PDF document not loaded');
+                return;
+            }
+            
+            try {
+                console.log(`Rendering page ${pageNumber}...`);
+                const page = await pdfDoc.getPage(pageNumber);
+                
+                // Calculate viewport with proper scaling
+                let scale = currentZoom;
+                const originalViewport = page.getViewport({ scale: 1.0 });
+                
+                // Auto-fit to container width if selected
+                if (document.getElementById('zoom-select').value === 'page-width') {
+                    const container = document.getElementById('pdf-viewer');
+                    const containerWidth = container.clientWidth - 40; // Account for padding
+                    scale = containerWidth / originalViewport.width;
+                    currentZoom = scale;
+                }
+                
+                const viewport = page.getViewport({ scale: scale });
+                
+                // Create canvas
+                const canvas = document.createElement('canvas');
+                canvas.className = 'pdf-page-canvas';
+                const context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                
+                // Create text layer for text selection (using PDF.js standard class name)
+                const textLayer = document.createElement('div');
+                textLayer.className = 'textLayer';
+                textLayer.style.position = 'absolute';
+                textLayer.style.top = '0';
+                textLayer.style.left = '0';
+                textLayer.style.width = viewport.width + 'px';
+                textLayer.style.height = viewport.height + 'px';
+                textLayer.style.pointerEvents = 'auto'; // Enable text selection
+                textLayer.style.cursor = 'text'; // Show text cursor
+                textLayer.style.zIndex = '10'; // Ensure it's above the canvas
+                
+                // Wrapper for canvas and text layer
+                const pageWrapper = document.createElement('div');
+                pageWrapper.style.position = 'relative';
+                pageWrapper.style.display = 'inline-block';
+                pageWrapper.style.marginBottom = '20px';
+                pageWrapper.appendChild(canvas);
+                pageWrapper.appendChild(textLayer);
+                
+                // Clear viewer and add page
+                const viewer = document.getElementById('pdf-viewer');
+                viewer.innerHTML = '';
+                viewer.appendChild(pageWrapper);
+                
+                // Show loading state
+                viewer.style.background = '#525659';
+                canvas.style.opacity = '0';
+                
+                // Render PDF page
+                const renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+                
+                const renderTask = page.render(renderContext);
+                await renderTask.promise;
+                
+                // Get text content for highlighting
+                const textContent = await page.getTextContent();
+                
+                // Render text layer for text selection
+                pdfjsLib.renderTextLayer({
+                    textContentSource: textContent,
+                    container: textLayer,
+                    viewport: viewport,
+                    textDivs: []
+                });
+                
+                // Set the required CSS variable for text layer scaling
+                textLayer.style.setProperty('--scale-factor', viewport.scale);
+                
+                // Store page data for reference
+                window.currentPageData = {
+                    pageNumber: pageNumber,
+                    textContent: textContent,
+                    viewport: viewport,
+                    textLayer: textLayer
+                };
+                
+                // Show rendered page
+                canvas.style.opacity = '1';
+                canvas.style.transition = 'opacity 0.3s ease';
+                
+                // Update controls
+                updatePageControls();
+                
+                console.log(`Successfully rendered page ${pageNumber} (${viewport.width}x${viewport.height} at ${(scale * 100).toFixed(0)}% zoom)`);
+                
+            } catch (error) {
+                console.error('Error rendering page:', error);
+                const viewer = document.getElementById('pdf-viewer');
+                viewer.innerHTML = `<div class="loading" style="color: #e74c3c;">Error rendering page ${pageNumber}</div>`;
+            }
+        }
+
+        function updatePageControls() {
+            document.getElementById('prev-page').disabled = currentPage <= 1;
+            document.getElementById('next-page').disabled = currentPage >= totalPages;
+        }
+
+        function updatePageNum() {
+            document.getElementById('page-num').value = currentPage;
+        }
+
+        function initializeInterface() {
+            updateHeaderStats();
+            updateReferenceList();
+            updateTextBlocks();
+        }
+
+        function updateHeaderStats() {
+            const headerStats = document.getElementById('headerStats');
+            const pdfStats = document.getElementById('pdfStats');
+            
+            if (referencesData && pdfDoc) {
+                const carRefs = referencesData.extraction_info.reference_list.filter(ref => 
+                    ref.startsWith('CAR-')).length;
+                
+                headerStats.textContent = `${carRefs} CAR references • ${referencesData.extraction_info.total_reference_blocks} text blocks`;
+                pdfStats.textContent = `${totalPages} pages • PDF.js viewer`;
+            }
+        }
+
+
+        function updateReferenceList() {
+            const referenceList = document.getElementById('referenceList');
+            const referenceCount = document.getElementById('referenceCount');
+            
+            if (!referencesData) return;
+            
+            // Filter for CAR references only
+            const allReferences = Object.keys(referencesData.reference_index);
+            const carReferences = allReferences.filter(ref => ref.startsWith('CAR-'));
+            
+            const filteredRefs = carReferences.filter(ref => 
+                ref.toLowerCase().includes(currentFilter)
+            );
+            
+            referenceCount.innerHTML = `<strong>${filteredRefs.length}</strong> CAR references found`;
+            
+            referenceList.innerHTML = '';
+            
+            // Sort references by type and number
+            const sortedRefs = filteredRefs.sort((a, b) => {
+                const getType = (ref) => {
+                    const match = ref.match(/CAR-([A-Z0-9]+)-/);
+                    return match ? match[1] : '';
+                };
+                
+                const typeA = getType(a);
+                const typeB = getType(b);
+                
+                if (typeA !== typeB) {
+                    return typeA.localeCompare(typeB);
+                }
+                return a.localeCompare(b);
+            });
+            
+            sortedRefs.slice(0, 50).forEach(ref => { // Show only first 50 for performance
+                const count = referencesData.reference_index[ref].length;
+                const tag = document.createElement('button');
+                tag.className = 'reference-tag';
+                tag.textContent = `${ref} (${count})`;
+                tag.onclick = () => selectReference(ref);
+                
+                if (selectedReference === ref) {
+                    tag.classList.add('selected');
+                }
+                
+                referenceList.appendChild(tag);
+            });
+            
+            if (filteredRefs.length > 50) {
+                const moreDiv = document.createElement('div');
+                moreDiv.style.textAlign = 'center';
+                moreDiv.style.marginTop = '10px';
+                moreDiv.style.fontSize = '11px';
+                moreDiv.style.color = '#666';
+                moreDiv.textContent = `... and ${filteredRefs.length - 50} more references`;
+                referenceList.appendChild(moreDiv);
+            }
+        }
+
+        function selectReference(reference) {
+            selectedReference = selectedReference === reference ? null : reference;
+            updateReferenceList();
+            updateTextBlocks();
+        }
+
+        function updateTextBlocks() {
+            const textBlocksContainer = document.getElementById('textBlocks');
+            
+            if (!referencesData) return;
+            
+            let blocksToShow = referencesData.reference_blocks;
+            
+            // Filter by selected reference
+            if (selectedReference) {
+                blocksToShow = referencesData.reference_index[selectedReference] || [];
+            } else if (currentFilter) {
+                blocksToShow = blocksToShow.filter(block => 
+                    block.text_block.toLowerCase().includes(currentFilter) ||
+                    block.references.some(ref => 
+                        ref.toLowerCase().includes(currentFilter) && ref.startsWith('CAR-')
+                    )
+                );
+            } else {
+                // Show only blocks with CAR references by default
+                blocksToShow = blocksToShow.filter(block =>
+                    block.references.some(ref => ref.startsWith('CAR-'))
+                );
+            }
+            
+            if (blocksToShow.length === 0) {
+                textBlocksContainer.innerHTML = '<div class="no-results">No matching CAR reference blocks found. Try a different search term.</div>';
+                return;
+            }
+            
+            textBlocksContainer.innerHTML = '';
+            
+            // Sort blocks by page number and show first 100 for performance
+            blocksToShow.sort((a, b) => a.page_number - b.page_number);
+            const displayBlocks = blocksToShow.slice(0, 100);
+            
+            displayBlocks.forEach(block => {
+                const blockElement = createTextBlockElement(block);
+                textBlocksContainer.appendChild(blockElement);
+            });
+            
+            if (blocksToShow.length > 100) {
+                const moreDiv = document.createElement('div');
+                moreDiv.className = 'no-results';
+                moreDiv.textContent = `Showing first 100 of ${blocksToShow.length} blocks. Refine your search for more specific results.`;
+                textBlocksContainer.appendChild(moreDiv);
+            }
+        }
+
+        function createTextBlockElement(block) {
+            const blockDiv = document.createElement('div');
+            blockDiv.className = 'text-block';
+            blockDiv.dataset.blockId = block.block_id;
+            blockDiv.onclick = () => highlightInPDF(block);
+            
+            if (highlightedBlockId === block.block_id) {
+                blockDiv.classList.add('highlighted');
+            }
+            
+            const blockInfo = document.createElement('div');
+            blockInfo.className = 'block-info';
+            
+            const pageNumber = document.createElement('span');
+            pageNumber.className = 'page-number';
+            pageNumber.textContent = `Page ${block.page_number}`;
+            
+            const references = document.createElement('div');
+            references.className = 'block-references';
+            
+            // Show only CAR references in the tags
+            const carRefs = block.references.filter(ref => ref.startsWith('CAR-'));
+            carRefs.forEach(ref => {
+                const refTag = document.createElement('span');
+                refTag.className = 'block-ref-tag';
+                refTag.textContent = ref;
+                references.appendChild(refTag);
+            });
+            
+            blockInfo.appendChild(pageNumber);
+            blockInfo.appendChild(references);
+            
+            const blockText = document.createElement('div');
+            blockText.className = 'block-text';
+            
+            // Highlight search terms in text
+            let displayText = block.text_block;
+            if (currentFilter) {
+                const regex = new RegExp(`(${escapeRegex(currentFilter)})`, 'gi');
+                displayText = displayText.replace(regex, '<span class="search-highlight">$1</span>');
+            }
+            
+            blockText.innerHTML = displayText;
+            
+            blockDiv.appendChild(blockInfo);
+            blockDiv.appendChild(blockText);
+            
+            return blockDiv;
+        }
+
+        function highlightInPDF(block) {
+            highlightedBlockId = block.block_id;
+            
+            // Update text block highlighting
+            document.querySelectorAll('.text-block').forEach(el => {
+                el.classList.remove('highlighted');
+            });
+            
+            const currentBlock = document.querySelector(`[data-block-id="${block.block_id}"]`);
+            if (currentBlock) {
+                currentBlock.classList.add('highlighted');
+            }
+            
+            // Navigate to the page in PDF and pass the block object with its specific CAR references
+            navigateToPDFPage(block.page_number, block);
+        }
+
+        async function navigateToPDFPage(pageNumber, blockData) {
+            if (pageNumber !== currentPage) {
+                currentPage = pageNumber;
+                await renderPage(currentPage);
+                updatePageNum();
+            }
+            
+            // No highlighting - just navigate to the page
+            console.log(`Navigated to page ${pageNumber} for block with references:`, 
+                        blockData.references ? blockData.references.filter(ref => ref.startsWith('CAR-')) : []);
+        }
+
+        // Highlighting functions removed - PDF is now selectable but without highlights
+
+        function extractCARReferencesFromText(text) {
+            // Match CAR references in various formats including revision suffixes like -R01, -R02, etc.
+            const carPatterns = [
+                // CAR-OTP patterns with optional revision suffix
+                /CAR-OTP-\d+-\d+(?:-R\d+)?/gi,
+                // CAR-D## patterns with optional revision suffix  
+                /CAR-D\d+-\d+-\d+(?:-R\d+)?/gi,
+                // CAR-V## patterns with optional revision suffix
+                /CAR-V\d+-\d+-\d+(?:-R\d+)?/gi,
+                // General CAR patterns with optional revision suffix
+                /CAR-[A-Z]+\d*-\d+-\d+(?:-R\d+)?/gi,
+                // Additional patterns for edge cases
+                /CAR-[A-Z]{2,}-\d+-\d+(?:-R\d+)?/gi
+            ];
+            
+            const references = new Set();
+            
+            carPatterns.forEach(pattern => {
+                const matches = text.match(pattern) || [];
+                matches.forEach(match => {
+                    // Clean up the match and add to set
+                    const cleanMatch = match.trim().toUpperCase();
+                    references.add(cleanMatch);
+                });
+            });
+            
+            console.log(`Extracted ${references.size} CAR references from text:`, Array.from(references));
+            
+            return Array.from(references);
+        }
+
+        // Text positioning function removed - no longer needed for highlighting
+
+        // Highlight overlay function removed - no longer needed
+
+        function filterReferences() {
+            updateReferenceList();
+        }
+
+        function escapeRegex(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showError(message) {
+            document.getElementById('textBlocks').innerHTML = `<div class="no-results">❌ ${message}</div>`;
+            document.getElementById('pdf-viewer').innerHTML = `<div class="no-results">❌ ${message}</div>`;
+        }
+    </script>
+</body>
+</html>

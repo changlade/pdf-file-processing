@@ -254,13 +254,14 @@
         .inline-toggle {
             position: absolute;
             right: 16px;
-            top: 12px; /* Same as input top padding */
-            bottom: 12px; /* Same as input bottom padding */
+            top: 50%;
+            transform: translateY(-50%);
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
             z-index: 10;
+            height: 24px; /* Fixed height for consistent centering */
         }
 
         .toggle-label-inline {
@@ -369,31 +370,41 @@
         }
 
         .filter-tag {
-            padding: 4px 10px;
-            background: var(--tertiary-bg);
-            border: 1px solid var(--border-light);
+            padding: 6px 12px;
+            background: #FFFFFF;
+            border: 2px solid #E5E7EB;
             border-radius: var(--radius-sm);
-            font-size: 11px;
-            color: var(--text-secondary);
+            font-size: 12px;
+            color: #4B5563;
             cursor: pointer;
             transition: all 0.2s ease;
             white-space: nowrap;
             user-select: none;
+            font-weight: 500;
         }
 
         .filter-tag:hover {
-            border-color: var(--primary-color);
-            color: var(--text-primary);
+            border-color: #005EB8;
+            color: #005EB8;
+            background: #F8FAFC;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 94, 184, 0.1);
         }
 
         .filter-tag.active {
-            background: var(--primary-color);
-            border-color: var(--primary-color);
-            color: white;
+            background: #005EB8 !important;
+            border-color: #005EB8 !important;
+            color: #FFFFFF !important;
+            font-weight: 600;
+            box-shadow: 0 3px 8px rgba(0, 94, 184, 0.4);
+            transform: translateY(-1px);
         }
 
         .filter-tag.active:hover {
-            background: #0083d1;
+            background: #00ACED !important;
+            border-color: #00ACED !important;
+            color: #FFFFFF !important;
+            box-shadow: 0 4px 12px rgba(0, 172, 237, 0.5);
         }
 
         .reference-count {
@@ -999,17 +1010,48 @@
                     if (e.target.classList.contains('filter-tag')) {
                         const selectedSection = e.target.getAttribute('data-section');
                         
-                        // Update active state
-                        sectionFilter.querySelectorAll('.filter-tag').forEach(tag => {
-                            tag.classList.remove('active');
-                        });
-                        e.target.classList.add('active');
+                        // Handle "All" button specially - it deselects everything else
+                        if (selectedSection === 'ALL') {
+                            sectionFilter.querySelectorAll('.filter-tag').forEach(tag => {
+                                tag.classList.remove('active');
+                            });
+                            e.target.classList.add('active');
+                        } else {
+                            // Remove "All" if it's active and we're selecting a specific section
+                            const allButton = sectionFilter.querySelector('.filter-tag[data-section="ALL"]');
+                            if (allButton.classList.contains('active')) {
+                                allButton.classList.remove('active');
+                            }
+                            
+                            // Toggle the clicked section
+                            e.target.classList.toggle('active');
+                            
+                            // If no sections are selected, activate "All"
+                            const activeSections = sectionFilter.querySelectorAll('.filter-tag.active:not([data-section="ALL"])');
+                            if (activeSections.length === 0) {
+                                allButton.classList.add('active');
+                            }
+                        }
                         
-                        // Filter and display results
-                        filterSemanticResults(selectedSection);
+                        // Get all selected sections and filter results
+                        const selectedSections = getSelectedSections();
+                        filterSemanticResults(selectedSections);
                     }
                 });
             }
+        }
+
+        // Helper function to get selected sections
+        function getSelectedSections() {
+            const sectionFilter = document.getElementById('sectionFilter');
+            const activeButtons = sectionFilter.querySelectorAll('.filter-tag.active');
+            const selectedSections = [];
+            
+            activeButtons.forEach(button => {
+                selectedSections.push(button.getAttribute('data-section'));
+            });
+            
+            return selectedSections;
         }
 
         // Semantic Search Functions
@@ -1229,18 +1271,20 @@
             });
         }
 
-        function filterSemanticResults(sectionType) {
+        function filterSemanticResults(selectedSections) {
             const textBlocksContainer = document.getElementById('textBlocks');
             
             if (!semanticResults || semanticResults.length === 0) {
                 return;
             }
             
-            // Filter results based on section type
+            // Filter results based on selected section types
             let filteredResults = semanticResults;
-            if (sectionType !== 'ALL') {
+            
+            // If "ALL" is selected or no sections are selected, show all results
+            if (!selectedSections.includes('ALL') && selectedSections.length > 0) {
                 filteredResults = semanticResults.filter(result => 
-                    result.section_type === sectionType
+                    selectedSections.includes(result.section_type)
                 );
             }
             
@@ -1248,7 +1292,8 @@
             textBlocksContainer.innerHTML = '';
             
             if (filteredResults.length === 0) {
-                textBlocksContainer.innerHTML = `<div class="no-results">No results found for section type: ${sectionType}</div>`;
+                const sectionNames = selectedSections.join(', ');
+                textBlocksContainer.innerHTML = `<div class="no-results">No results found for section types: ${sectionNames}</div>`;
                 return;
             }
             
@@ -1257,7 +1302,8 @@
                 textBlocksContainer.appendChild(blockElement);
             });
             
-            console.log(`🏷️ Filtered results: ${filteredResults.length} of ${semanticResults.length} for section type: ${sectionType}`);
+            const sectionNames = selectedSections.includes('ALL') ? 'ALL' : selectedSections.join(', ');
+            console.log(`🏷️ Filtered results: ${filteredResults.length} of ${semanticResults.length} for section types: ${sectionNames}`);
         }
 
         function createSemanticBlockElement(result, index) {

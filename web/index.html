@@ -246,59 +246,92 @@
             border: 1px solid var(--border-light);
         }
 
-        .search-controls {
-            display: flex;
-            gap: 8px;
-            align-items: flex-start;
+        .search-options {
+            margin-top: 12px;
+            padding: 10px 0;
         }
 
-        .semantic-search-btn {
-            flex: 1;
-        }
-
-        .result-mode-selector {
-            margin-top: 2px;
-        }
-
-        .result-mode-btn {
+        .toggle-option {
             display: flex;
             align-items: center;
-            gap: 4px;
-            padding: 6px 10px;
-            background: var(--secondary-bg);
-            border: 1px solid var(--border-light);
-            border-radius: var(--radius-sm);
-            font-size: 11px;
-            color: var(--text-secondary);
+        }
+
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 12px;
             cursor: pointer;
-            transition: all 0.2s ease;
-            white-space: nowrap;
             user-select: none;
         }
 
-        .result-mode-btn:hover {
+        .toggle-input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: relative;
+            width: 44px;
+            height: 22px;
+            background: var(--border-medium);
+            border-radius: 22px;
+            transition: all 0.3s ease;
+            border: 2px solid var(--border-light);
+        }
+
+        .toggle-slider:before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 14px;
+            height: 14px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .toggle-input:checked + .toggle-slider {
+            background: var(--primary-color);
             border-color: var(--primary-color);
-            background: var(--tertiary-bg);
+        }
+
+        .toggle-input:checked + .toggle-slider:before {
+            transform: translateX(22px);
+            box-shadow: 0 2px 6px rgba(0, 94, 184, 0.3);
+        }
+
+        .toggle-switch:hover .toggle-slider {
+            border-color: var(--primary-color);
+        }
+
+        .toggle-input:checked + .toggle-slider:hover {
+            background: #0083d1;
+        }
+
+        .toggle-label {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .toggle-text {
+            font-size: 13px;
+            font-weight: 500;
             color: var(--text-primary);
         }
 
-        .result-mode-btn[data-mode="all"] {
-            background: rgba(0, 94, 184, 0.1);
-            border-color: var(--primary-color);
+        .toggle-description {
+            font-size: 11px;
+            color: var(--text-secondary);
+            line-height: 1.3;
+        }
+
+        .toggle-input:checked ~ .toggle-label .toggle-text {
             color: var(--primary-color);
-        }
-
-        .result-mode-btn[data-mode="all"]:hover {
-            background: rgba(0, 94, 184, 0.15);
-        }
-
-        .mode-icon {
-            font-size: 12px;
-            line-height: 1;
-        }
-
-        .mode-text {
-            font-weight: 500;
         }
 
         .reference-count {
@@ -742,13 +775,18 @@
                         <input type="text" id="semanticInput" class="filter-input" 
                                placeholder="Enter semantic search query (e.g., 'violence against Muslims', 'war crimes evidence')...">
                     </div>
-                    <div class="search-controls">
-                        <button id="semanticSearchBtn" class="semantic-search-btn">Search</button>
-                        <div class="result-mode-selector">
-                            <button id="resultModeBtn" class="result-mode-btn" data-mode="normal" title="Click to switch to 'Get All References' (500 results)">
-                                <span class="mode-icon">📄</span>
-                                <span class="mode-text">20 results</span>
-                            </button>
+                    <button id="semanticSearchBtn" class="semantic-search-btn">Search</button>
+                    
+                    <div class="search-options">
+                        <div class="toggle-option">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="getAllToggle" class="toggle-input">
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">
+                                    <span class="toggle-text">Get All References</span>
+                                    <span class="toggle-description">Retrieve up to 500 results instead of 20</span>
+                                </span>
+                            </label>
                         </div>
                     </div>
                     
@@ -870,26 +908,14 @@
                 }
             });
             
-            // Handle result mode selector button
-            const resultModeBtn = document.getElementById('resultModeBtn');
-            if (resultModeBtn) {
-                resultModeBtn.addEventListener('click', function() {
-                    const currentMode = this.getAttribute('data-mode');
-                    const modeIcon = this.querySelector('.mode-icon');
-                    const modeText = this.querySelector('.mode-text');
-                    
-                    if (currentMode === 'normal') {
-                        // Switch to "all" mode
-                        this.setAttribute('data-mode', 'all');
-                        this.setAttribute('title', 'Click to switch to Normal search (20 results)');
-                        modeIcon.textContent = '🔍';
-                        modeText.textContent = '500 results';
-                    } else {
-                        // Switch to "normal" mode
-                        this.setAttribute('data-mode', 'normal');
-                        this.setAttribute('title', 'Click to switch to \'Get All References\' (500 results)');
-                        modeIcon.textContent = '📄';
-                        modeText.textContent = '20 results';
+            // Handle toggle change to automatically re-run last search
+            const getAllToggle = document.getElementById('getAllToggle');
+            if (getAllToggle) {
+                getAllToggle.addEventListener('change', function() {
+                    // If we have a previous query, automatically re-run it with the new setting
+                    if (lastSemanticQuery) {
+                        console.log(`🔄 Toggle changed, re-running search: "${lastSemanticQuery}" with get_all=${this.checked}`);
+                        performSemanticSearch();
                     }
                 });
             }
@@ -982,9 +1008,9 @@
                 lastSemanticQuery = query;
                 
                 // Show result count for debugging and user feedback
-                const resultModeBtn = document.getElementById('resultModeBtn');
-                const isGetAll = resultModeBtn && resultModeBtn.getAttribute('data-mode') === 'all';
-                console.log(`📊 Received ${semanticResults.length} results (${isGetAll ? 'ALL mode' : 'NORMAL mode'})`);
+                const getAllToggle = document.getElementById('getAllToggle');
+                const isGetAll = getAllToggle && getAllToggle.checked;
+                console.log(`📊 Received ${semanticResults.length} results (${isGetAll ? 'ALL mode (500)' : 'NORMAL mode (20)'})`);
                 
                 // Display results
                 displaySemanticResults();
@@ -1011,15 +1037,15 @@
             // Use local proxy server to avoid CORS issues
             const url = 'http://127.0.0.1:8002/semantic-search';
             
-            // Check if "Get all references" mode is selected
-            const resultModeBtn = document.getElementById('resultModeBtn');
-            const getAllReferences = resultModeBtn && resultModeBtn.getAttribute('data-mode') === 'all';
+            // Check if "Get all references" toggle is enabled
+            const getAllToggle = document.getElementById('getAllToggle');
+            const getAllReferences = getAllToggle && getAllToggle.checked;
             
             console.log('🔍 Semantic search debug:', {
                 query: query,
                 get_all: getAllReferences,
-                mode_button_found: !!resultModeBtn,
-                current_mode: resultModeBtn ? resultModeBtn.getAttribute('data-mode') : 'N/A'
+                toggle_found: !!getAllToggle,
+                toggle_checked: getAllToggle ? getAllToggle.checked : 'N/A'
             });
             
             const requestData = {

@@ -4,6 +4,7 @@ Simple Flask Proxy for Semantic Search
 Handles Databricks API calls to avoid CORS issues
 """
 
+import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests

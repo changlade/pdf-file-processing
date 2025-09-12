@@ -959,11 +959,11 @@
                 summary: result.summary || '',
                 section_type: result.section_type || 'SEMANTIC_RESULT',
                 page_range: result.page_range || 'Unknown',
-                similarity_score: result.similarity_score || 0
+                relevance_score: result.relevance_score || 0
             }));
             
-            // Sort by similarity score (highest first)
-            processedResults.sort((a, b) => b.similarity_score - a.similarity_score);
+            // Sort by relevance score (highest first)
+            processedResults.sort((a, b) => b.relevance_score - a.relevance_score);
             
             return processedResults;
         }
@@ -1025,13 +1025,13 @@
             const metadata = document.createElement('div');
             metadata.className = 'block-references';
             
-            // Add similarity score (most important, so show first)
-            if (result.similarity_score) {
+            // Add relevance score (most important, so show first)
+            if (result.relevance_score) {
                 const scoreTag = document.createElement('span');
                 scoreTag.className = 'block-ref-tag';
                 scoreTag.style.background = '#54AD18'; // Danone green
                 scoreTag.style.fontWeight = '600';
-                scoreTag.textContent = `${(result.similarity_score * 100).toFixed(1)}% match`;
+                scoreTag.textContent = `${(result.relevance_score * 100).toFixed(1)}% relevance`;
                 metadata.appendChild(scoreTag);
             }
             

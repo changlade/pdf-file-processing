@@ -179,3 +179,42 @@ export DATABRICKS_TOKEN=your-actual-databricks-token-here
 export DATABRICKS_TOKEN=your-actual-production-token
 ./builds/build_mac_secure.sh
 ```
+
+## 🔧 Troubleshooting Windows Builds
+
+If the Windows build script "does not do anything", try these steps:
+
+### Step 1: Check Requirements
+```cmd
+builds\check_windows_requirements.bat
+```
+
+### Step 2: Run Debug Build
+```cmd
+builds\debug_windows_build.bat
+```
+
+### Step 3: Try Verbose Build
+```cmd
+set DATABRICKS_TOKEN=your-token-here
+builds\build_windows_secure_verbose.bat
+```
+
+### Step 4: Test Simple Build
+```cmd
+builds\test_windows_simple.bat
+```
+
+### Common Issues:
+
+**Problem**: "Nothing happens"  
+**Solution**: Check if `DATABRICKS_TOKEN` environment variable is set
+
+**Problem**: "Python not found"  
+**Solution**: Install Python and add to PATH, or use `python3` instead of `python`
+
+**Problem**: "PyInstaller not found"  
+**Solution**: Run `pip install pyinstaller flask flask-cors requests`
+
+**Problem**: "Spec file not found"  
+**Solution**: Ensure you're running from the correct directory and `current_specs/` exists

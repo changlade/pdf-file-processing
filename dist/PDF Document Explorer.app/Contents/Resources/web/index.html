@@ -173,6 +173,79 @@
             position: relative;
         }
 
+        .search-mode-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            background: var(--tertiary-bg);
+            padding: 4px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-light);
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            border-radius: var(--radius-sm);
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .mode-btn.active {
+            background: var(--primary-bg);
+            color: var(--accent-blue);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .mode-btn:hover:not(.active) {
+            background: var(--primary-bg);
+            color: var(--text-primary);
+        }
+
+        .search-section {
+            transition: opacity 0.2s ease;
+        }
+
+        .semantic-search-btn {
+            width: 100%;
+            background: var(--accent-orange);
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 12px;
+            transition: background-color 0.15s ease;
+        }
+
+        .semantic-search-btn:hover {
+            background: var(--accent-orange-light);
+        }
+
+        .semantic-search-btn:disabled {
+            background: var(--border-medium);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .semantic-status {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-top: 12px;
+            padding: 8px;
+            background: var(--tertiary-bg);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-light);
+        }
+
         .reference-count {
             font-size: 13px;
             color: var(--text-secondary);
@@ -190,7 +263,9 @@
         }
 
         .reference-tag {
-            display: inline-block;
+            display: inline-flex;
+            justify-content: space-between;
+            align-items: center;
             background: var(--accent-blue-light);
             color: white;
             padding: 6px 12px;
@@ -202,6 +277,20 @@
             border: none;
             transition: background-color 0.15s ease, transform 0.1s ease;
             letter-spacing: 0.025em;
+            min-width: fit-content;
+            max-width: fit-content;
+        }
+
+        .ref-name {
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        .ref-count {
+            font-weight: 600;
+            opacity: 0.9;
+            margin-left: 8px;
+            flex-shrink: 0;
         }
 
         .reference-tag:hover {
@@ -290,6 +379,35 @@
             font-size: 14px;
             color: var(--text-primary);
             font-weight: 400;
+        }
+
+        .block-summary-main {
+            line-height: 1.6;
+            font-size: 15px;
+            color: var(--text-primary);
+            font-weight: 400;
+            margin: 12px 0;
+            padding: 0;
+        }
+
+        .block-content-excerpt {
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            padding: 10px;
+            margin-top: 12px;
+            font-size: 12px;
+            line-height: 1.4;
+            color: var(--text-muted);
+            border-left: 3px solid var(--border-medium);
+        }
+
+        .block-content-excerpt strong {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
         }
 
         /* PDF Viewer Styles */
@@ -531,7 +649,7 @@
             <div class="panel-header">
                 <div class="header-title">
                     <span class="header-icon">📄</span>
-                    CAR References Explorer
+                    <span id="headerTitle">CAR References Explorer</span>
                 </div>
                 <div class="header-stats" id="headerStats">
                     Loading document references...
@@ -539,18 +657,41 @@
             </div>
             
             <div class="filter-section">
-                <div class="filter-container">
-                    <span class="search-icon">🔍</span>
-                <input type="text" id="searchInput" class="filter-input" 
-                           placeholder="Search CAR references (e.g., CAR-D29, CAR-OTP, CAR-V45)...">
+                <!-- Search Mode Toggle -->
+                <div class="search-mode-toggle">
+                    <button id="carModeBtn" class="mode-btn active">CAR References</button>
+                    <button id="semanticModeBtn" class="mode-btn">Semantic Search</button>
                 </div>
-                
-                <div class="reference-count" id="referenceCount">
-                    Loading references...
+
+                <!-- CAR Search Section -->
+                <div id="carSearchSection" class="search-section">
+                    <div class="filter-container">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="searchInput" class="filter-input" 
+                               placeholder="Search CAR references (e.g., CAR-D29, CAR-OTP, CAR-V45)...">
+                    </div>
+                    
+                    <div class="reference-count" id="referenceCount">
+                        Loading references...
+                    </div>
+                    
+                    <div class="reference-list" id="referenceList">
+                        <!-- Reference tags will be populated here -->
+                    </div>
                 </div>
-                
-                <div class="reference-list" id="referenceList">
-                    <!-- Reference tags will be populated here -->
+
+                <!-- Semantic Search Section -->
+                <div id="semanticSearchSection" class="search-section" style="display: none;">
+                    <div class="filter-container">
+                        <span class="search-icon">🧠</span>
+                        <input type="text" id="semanticInput" class="filter-input" 
+                               placeholder="Enter semantic search query (e.g., 'violence against Muslims', 'war crimes evidence')...">
+                    </div>
+                    <button id="semanticSearchBtn" class="semantic-search-btn">Search</button>
+                    
+                    <div class="semantic-status" id="semanticStatus" style="display: none;">
+                        Searching...
+                    </div>
                 </div>
             </div>
             
@@ -620,6 +761,11 @@
         let currentPage = 1;
         let totalPages = 0;
         let currentZoom = 1.25;
+        
+        // Semantic search variables
+        let currentSearchMode = 'car'; // 'car' or 'semantic'
+        let semanticResults = null;
+        let lastSemanticQuery = '';
 
         // PDF.js will be configured when loading the PDF
 
@@ -632,12 +778,335 @@
         });
 
         function setupEventListeners() {
+            // CAR search input
             const searchInput = document.getElementById('searchInput');
             searchInput.addEventListener('input', function() {
-                currentFilter = this.value.toLowerCase();
-                filterReferences();
-                updateTextBlocks();
+                if (currentSearchMode === 'car') {
+                    currentFilter = this.value.toLowerCase();
+                    filterReferences();
+                    updateTextBlocks();
+                }
             });
+
+            // Mode toggle buttons
+            const carModeBtn = document.getElementById('carModeBtn');
+            const semanticModeBtn = document.getElementById('semanticModeBtn');
+            
+            carModeBtn.addEventListener('click', () => switchSearchMode('car'));
+            semanticModeBtn.addEventListener('click', () => switchSearchMode('semantic'));
+
+            // Semantic search
+            const semanticInput = document.getElementById('semanticInput');
+            const semanticSearchBtn = document.getElementById('semanticSearchBtn');
+            
+            semanticSearchBtn.addEventListener('click', performSemanticSearch);
+            
+            semanticInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    performSemanticSearch();
+                }
+            });
+        }
+
+        // Semantic Search Functions
+        function switchSearchMode(mode) {
+            currentSearchMode = mode;
+            
+            const carModeBtn = document.getElementById('carModeBtn');
+            const semanticModeBtn = document.getElementById('semanticModeBtn');
+            const carSection = document.getElementById('carSearchSection');
+            const semanticSection = document.getElementById('semanticSearchSection');
+            const headerTitle = document.getElementById('headerTitle');
+            
+            if (mode === 'car') {
+                carModeBtn.classList.add('active');
+                semanticModeBtn.classList.remove('active');
+                carSection.style.display = 'block';
+                semanticSection.style.display = 'none';
+                headerTitle.textContent = 'CAR References Explorer';
+                
+                // Restore CAR search results
+                updateTextBlocks();
+            } else {
+                carModeBtn.classList.remove('active');
+                semanticModeBtn.classList.add('active');
+                carSection.style.display = 'none';
+                semanticSection.style.display = 'block';
+                headerTitle.textContent = 'Semantic Search Explorer';
+                
+                // Show semantic results if available
+                if (semanticResults) {
+                    displaySemanticResults();
+                } else {
+                    showSemanticWelcome();
+                }
+            }
+        }
+
+        function showSemanticWelcome() {
+            const textBlocksContainer = document.getElementById('textBlocks');
+            const headerStats = document.getElementById('headerStats');
+            
+            // Clear header stats for semantic search welcome
+            headerStats.textContent = '';
+            
+            textBlocksContainer.innerHTML = `
+                <div class="no-results">
+                    <h3 style="margin-bottom: 12px; color: var(--accent-blue);">🧠 Semantic Search</h3>
+                    <p style="margin-bottom: 16px;">Search for concepts, topics, and meaning rather than exact text matches.</p>
+                    <p style="font-size: 13px; color: var(--text-muted);">
+                        Try queries like: "violence against Muslims", "war crimes evidence", "witness testimony about killings"
+                    </p>
+                </div>
+            `;
+        }
+
+        async function performSemanticSearch() {
+            const semanticInput = document.getElementById('semanticInput');
+            const query = semanticInput.value.trim();
+            
+            if (!query) {
+                alert('Please enter a search query');
+                return;
+            }
+            
+            if (query === lastSemanticQuery && semanticResults) {
+                // Same query, just display existing results
+                displaySemanticResults();
+                return;
+            }
+            
+            const statusDiv = document.getElementById('semanticStatus');
+            const searchBtn = document.getElementById('semanticSearchBtn');
+            const textBlocksContainer = document.getElementById('textBlocks');
+            
+            try {
+                // Show loading state
+                statusDiv.style.display = 'block';
+                statusDiv.textContent = 'Searching with AI...';
+                searchBtn.disabled = true;
+                textBlocksContainer.innerHTML = '<div class="loading">Performing semantic search...</div>';
+                
+                // Call Databricks API
+                const results = await callDatabricksAPI(query);
+                
+                // Process and store results
+                semanticResults = processSemanticResults(results);
+                lastSemanticQuery = query;
+                
+                // Display results
+                displaySemanticResults();
+                
+                statusDiv.style.display = 'none';
+                
+            } catch (error) {
+                console.error('Semantic search error:', error);
+                statusDiv.textContent = 'Search failed: ' + error.message;
+                statusDiv.style.color = '#e74c3c';
+                
+                textBlocksContainer.innerHTML = `
+                    <div class="no-results" style="color: #e74c3c;">
+                        ❌ Search failed: ${error.message}
+                        <br><small>Check your connection and try again</small>
+                    </div>
+                `;
+            } finally {
+                searchBtn.disabled = false;
+            }
+        }
+
+        async function callDatabricksAPI(query) {
+            // Use local proxy server to avoid CORS issues
+            const url = 'http://127.0.0.1:8002/semantic-search';
+            
+            const requestData = {
+                query: query
+            };
+            
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            });
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Proxy request failed: ${response.status} - ${errorText}`);
+            }
+            
+            const result = await response.json();
+            return result;
+        }
+
+        function processSemanticResults(apiResult) {
+            // Extract predictions from API response
+            if (!apiResult || !apiResult.predictions || !Array.isArray(apiResult.predictions)) {
+                throw new Error('Invalid API response format');
+            }
+            
+            const predictions = apiResult.predictions[0]; // Get first (and only) prediction array
+            
+            if (!Array.isArray(predictions)) {
+                throw new Error('No search results found');
+            }
+            
+            // Process each result to match our display format
+            let processedResults = predictions.map((result, index) => ({
+                chunk_id: result.chunk_id || `result_${index}`,
+                content: result.content || '',
+                summary: result.summary || '',
+                section_type: result.section_type || 'SEMANTIC_RESULT',
+                page_range: result.page_range || 'Unknown',
+                similarity_score: result.similarity_score || 0
+            }));
+            
+            // Sort by similarity score (highest first)
+            processedResults.sort((a, b) => b.similarity_score - a.similarity_score);
+            
+            return processedResults;
+        }
+
+        function displaySemanticResults() {
+            const textBlocksContainer = document.getElementById('textBlocks');
+            const headerStats = document.getElementById('headerStats');
+            
+            if (!semanticResults || semanticResults.length === 0) {
+                textBlocksContainer.innerHTML = '<div class="no-results">No semantic search results found. Try a different query.</div>';
+                headerStats.textContent = 'No results found';
+                return;
+            }
+            
+            // Clear header stats for semantic search mode
+            headerStats.textContent = '';
+            
+            textBlocksContainer.innerHTML = '';
+            
+            semanticResults.forEach((result, index) => {
+                const blockElement = createSemanticBlockElement(result, index);
+                textBlocksContainer.appendChild(blockElement);
+            });
+        }
+
+        function createSemanticBlockElement(result, index) {
+            const blockDiv = document.createElement('div');
+            blockDiv.className = 'text-block';
+            blockDiv.dataset.blockId = result.chunk_id;
+            blockDiv.onclick = () => highlightSemanticResult(result);
+            
+            if (highlightedBlockId === result.chunk_id) {
+                blockDiv.classList.add('highlighted');
+            }
+            
+            const blockInfo = document.createElement('div');
+            blockInfo.className = 'block-info';
+            
+            // Display full page range (e.g., "1192-1192" or "1192-1194")
+            const pageRange = result.page_range || 'Unknown';
+            
+            const pageElement = document.createElement('span');
+            pageElement.className = 'page-number';
+            
+            // Format page range display
+            if (pageRange === 'Unknown') {
+                pageElement.textContent = 'Page Unknown';
+            } else if (pageRange.includes('-')) {
+                const [startPage, endPage] = pageRange.split('-');
+                if (startPage === endPage) {
+                    pageElement.textContent = `Page ${startPage}`;
+                } else {
+                    pageElement.textContent = `Pages ${startPage}-${endPage}`;
+                }
+            } else {
+                pageElement.textContent = `Page ${pageRange}`;
+            }
+            
+            const metadata = document.createElement('div');
+            metadata.className = 'block-references';
+            
+            // Add similarity score (most important, so show first)
+            if (result.similarity_score) {
+                const scoreTag = document.createElement('span');
+                scoreTag.className = 'block-ref-tag';
+                scoreTag.style.background = '#54AD18'; // Danone green
+                scoreTag.style.fontWeight = '600';
+                scoreTag.textContent = `${(result.similarity_score * 100).toFixed(1)}% match`;
+                metadata.appendChild(scoreTag);
+            }
+            
+            // Add section type
+            const sectionTag = document.createElement('span');
+            sectionTag.className = 'block-ref-tag';
+            sectionTag.style.background = '#005EB8'; // Danone primary blue
+            sectionTag.textContent = result.section_type;
+            metadata.appendChild(sectionTag);
+            
+            blockInfo.appendChild(pageElement);
+            blockInfo.appendChild(metadata);
+            
+            blockDiv.appendChild(blockInfo);
+            
+            // Main content: Summary (primary display)
+            if (result.summary && result.summary.trim()) {
+                const summaryDiv = document.createElement('div');
+                summaryDiv.className = 'block-summary-main';
+                summaryDiv.textContent = result.summary;
+                blockDiv.appendChild(summaryDiv);
+            }
+            
+            // Secondary content: Raw content excerpt for reference
+            const contentExcerpt = document.createElement('div');
+            contentExcerpt.className = 'block-content-excerpt';
+            
+            // Show first ~200 characters of raw content for reference
+            const excerptLength = 200;
+            const excerpt = result.content.length > excerptLength 
+                ? result.content.substring(0, excerptLength) + '...'
+                : result.content;
+            
+            contentExcerpt.innerHTML = `<strong>Raw content:</strong> ${excerpt}`;
+            blockDiv.appendChild(contentExcerpt);
+            
+            return blockDiv;
+        }
+
+        function extractPageFromRange(pageRange) {
+            if (!pageRange || pageRange === 'Unknown') return 'Unknown';
+            
+            // Handle formats like "1192-1192" or "1192"
+            const match = pageRange.match(/(\d+)/);
+            return match ? match[1] : pageRange;
+        }
+
+        function highlightSemanticResult(result) {
+            highlightedBlockId = result.chunk_id;
+            
+            // Update text block highlighting
+            document.querySelectorAll('.text-block').forEach(el => {
+                el.classList.remove('highlighted');
+            });
+            
+            const currentBlock = document.querySelector(`[data-block-id="${result.chunk_id}"]`);
+            if (currentBlock) {
+                currentBlock.classList.add('highlighted');
+            }
+            
+            // Navigate to the page in PDF - use first page of range
+            const pageNumber = extractFirstPageFromRange(result.page_range);
+            if (pageNumber !== 'Unknown') {
+                navigateToPDFPage(parseInt(pageNumber), result);
+            }
+        }
+
+        function extractFirstPageFromRange(pageRange) {
+            if (!pageRange || pageRange === 'Unknown') return 'Unknown';
+            
+            // Handle formats like "1192-1194" -> "1192" or "1192" -> "1192"
+            if (pageRange.includes('-')) {
+                return pageRange.split('-')[0];
+            }
+            return pageRange;
         }
 
         function setupPDFControls() {
@@ -917,11 +1386,9 @@
             const pdfStats = document.getElementById('pdfStats');
             
             if (referencesData && pdfDoc) {
-                const carRefs = referencesData.extraction_info.reference_list.filter(ref => 
-                    ref.startsWith('CAR-')).length;
-                
-                headerStats.textContent = `${carRefs} CAR references • ${referencesData.extraction_info.total_reference_blocks} text blocks`;
-                pdfStats.textContent = `${totalPages} pages • PDF.js viewer`;
+                // Clear header stats for clean interface
+                headerStats.textContent = '';
+                pdfStats.textContent = ''; // Clear PDF stats
             }
         }
 
@@ -944,18 +1411,14 @@
             
             referenceList.innerHTML = '';
             
-            // Sort references by type and number
+            // Sort references by occurrence count (most occurrences first)
             const sortedRefs = filteredRefs.sort((a, b) => {
-                const getType = (ref) => {
-                    const match = ref.match(/CAR-([A-Z0-9]+)-/);
-                    return match ? match[1] : '';
-                };
+                const countA = referencesData.reference_index[a].length;
+                const countB = referencesData.reference_index[b].length;
                 
-                const typeA = getType(a);
-                const typeB = getType(b);
-                
-                if (typeA !== typeB) {
-                    return typeA.localeCompare(typeB);
+                // Sort by count descending, then alphabetically
+                if (countA !== countB) {
+                    return countB - countA; // Descending order
                 }
                 return a.localeCompare(b);
             });
@@ -964,8 +1427,19 @@
                 const count = referencesData.reference_index[ref].length;
                 const tag = document.createElement('button');
                 tag.className = 'reference-tag';
-                tag.textContent = `${ref} (${count})`;
                 tag.onclick = () => selectReference(ref);
+                
+                // Create structured layout for reference and count
+                const refSpan = document.createElement('span');
+                refSpan.className = 'ref-name';
+                refSpan.textContent = ref;
+                
+                const countSpan = document.createElement('span');
+                countSpan.className = 'ref-count';
+                countSpan.textContent = `(${count})`;
+                
+                tag.appendChild(refSpan);
+                tag.appendChild(countSpan);
                 
                 if (selectedReference === ref) {
                     tag.classList.add('selected');

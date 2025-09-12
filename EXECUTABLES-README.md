@@ -9,9 +9,11 @@ You now have **professional standalone executables** that require **ZERO setup**
 #### 🍎 **macOS Application**
 - **File**: `dist/PDF Document Explorer.app`
 - **Size**: ~40MB (includes everything needed)
-- **Requirements**: macOS 10.13+ (High Sierra or later)
-- **Usage**: Users just double-click the .app file!
-- **Features**: 🔇 Silent launch (no console), ⚡ 0.3s startup
+- **Requirements**: macOS 10.9+ (Mavericks or later) - Intel & Apple Silicon
+- **Usage**: Right-click → Open (first time), then double-click normally
+- **Features**: 🔇 Silent launch (no console), ⚡ 1.0s startup (optimized for old systems)
+- **Ultra-Compatibility**: Python 2.6+/3.x, legacy subprocess, old HTTP servers, no modern features
+- **Security**: ⚠️ Shows security warning (normal for non-App Store apps) - see `HOW-TO-OPEN-MAC.md`
 
 #### 🖥️ **Windows Executable** 
 - **File**: `dist/PDF Document Explorer.exe` (after running `build_windows.bat`)
@@ -75,9 +77,9 @@ When users run the executable:
 
 **macOS (.app):**
 1. **🎬 App starts** (silently in background)
-2. **🌐 Web server launches** (finds available port automatically) 
-3. **🚀 Browser opens** (in 0.3 seconds)
-4. **📱 PDF Explorer ready** (fully functional!)
+2. **🌐 Web server launches** (ultra-compatible HTTP server) 
+3. **🚀 Browser opens** (in 1.0 second - optimized for old systems)
+4. **📱 PDF Explorer ready** (works on macOS 10.9+ from 2013 and Intel Macs!)
 
 **Windows (.exe):**
 1. **🎬 Console appears** (startup progress shown)

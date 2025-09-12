@@ -21,6 +21,11 @@ Thumbs.db
 # Configuration files with secrets
 config.env
 .env
+token_config.py
+REAL_TOKEN_INSTRUCTIONS.md
+
+# Backup files created during secure builds
+*.backup
 
 # Temporary files
 *.tmp

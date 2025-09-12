@@ -29,13 +29,20 @@ def semantic_search():
         if not query:
             return jsonify({'error': 'Query cannot be empty'}), 400
         
-        print(f"Processing semantic search query: {query}")
+        # Check if "get all references" is requested
+        get_all = data.get('get_all', False)
+        num_results = 500 if get_all else 20  # Use 500 for "get all", 20 for normal search
+        
+        print(f"🔍 Processing semantic search query: {query}")
+        print(f"   📊 Request data: {data}")
+        print(f"   🎯 get_all: {get_all}")
+        print(f"   📈 num_results: {num_results}")
         
         # Prepare request to Databricks
         databricks_data = {
             "dataframe_split": {
                 "columns": ["query", "num_results"],
-                "data": [[query, 20]]
+                "data": [[query, num_results]]
             }
         }
         

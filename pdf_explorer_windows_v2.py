@@ -61,10 +61,14 @@ class SemanticSearchProxy:
                 if not query:
                     return jsonify({'error': 'Query cannot be empty'}), 400
                 
-                print(f"Processing semantic search query: {query}")
+                # Check if "get all references" is requested
+                get_all = data.get('get_all', False)
+                num_results = 500 if get_all else 20
+                
+                print(f"Processing semantic search query: {query} (num_results: {num_results})")
                 
                 # Call Databricks API
-                result = self.call_databricks_api(query)
+                result = self.call_databricks_api(query, num_results)
                 return jsonify(result)
                 
             except Exception as e:
@@ -75,12 +79,12 @@ class SemanticSearchProxy:
         def health_check():
             return jsonify({'status': 'healthy', 'service': 'semantic-search-proxy'})
     
-    def call_databricks_api(self, query):
+    def call_databricks_api(self, query, num_results=20):
         """Call the Databricks Vector Search API"""
         request_data = {
             "dataframe_split": {
                 "columns": ["query", "num_results"],
-                "data": [[query, 20]]
+                "data": [[query, num_results]]
             }
         }
         

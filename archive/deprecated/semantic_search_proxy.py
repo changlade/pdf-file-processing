@@ -75,16 +75,16 @@ class SemanticSearchHandler(BaseHTTPRequestHandler):
             print(f"Error in semantic search: {e}")
             return {"error": f"Semantic search failed: {str(e)}"}
 
-    def call_databricks_api(self, query):
+    def call_databricks_api(self, query, num_results=20):
         """Call the Databricks Vector Search API"""
         url = 'https://dbc-0619d7f5-0bda.cloud.databricks.com/serving-endpoints/icc-intelligence/invocations'
-        token = os.getenv('DATABRICKS_TOKEN', 'your-databricks-token-here')
+        token = os.getenv('DATABRICKS_TOKEN', 'your-databricks-token-here')  # gitleaks:allow
         
         # Prepare the data in the format expected by Databricks
         request_data = {
             "dataframe_split": {
                 "columns": ["query", "num_results"],
-                "data": [[query, 20]]
+                "data": [[query, num_results]]
             }
         }
         

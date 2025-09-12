@@ -63,6 +63,7 @@
             overflow: hidden;
             position: relative;
             box-shadow: var(--shadow-sm);
+            height: 100vh; /* Fixed height to full viewport */
         }
 
         .resizer {
@@ -471,6 +472,32 @@
             background: var(--secondary-bg);
         }
 
+        /* Hide text-blocks when chat is active */
+        .left-panel.chat-active .text-blocks {
+            display: none !important;
+        }
+
+        /* Make filter section smaller when chat is active */
+        .left-panel.chat-active .filter-section {
+            flex-shrink: 0;
+        }
+
+        /* Make chat section take full remaining space */
+        .left-panel.chat-active #chatSection {
+            flex: 1;
+            display: flex !important;
+            flex-direction: column;
+            height: calc(100vh - 160px); /* Account for header and filter sections */
+            overflow: hidden;
+        }
+
+        /* Ensure the left panel structure when chat is active */
+        .left-panel.chat-active {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
         .text-block {
             background: var(--primary-bg);
             border: 1px solid var(--border-light);
@@ -779,6 +806,340 @@
             outline-offset: 2px;
         }
 
+        /* Chat Styles */
+        .chat-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            margin-bottom: 0; /* Remove margin to allow input to be fixed */
+            min-height: 0; /* Allow shrinking */
+            height: 0; /* Force flex to calculate height */
+        }
+
+        /* When chat is active, ensure messages fill most of the space */
+        .left-panel.chat-active .chat-messages {
+            flex: 1;
+            height: auto;
+            max-height: calc(100vh - 320px); /* Account for header, filter, and input */
+        }
+
+        /* Fixed chat input at bottom */
+        .chat-input-section {
+            position: sticky;
+            bottom: 0;
+            background: var(--primary-bg);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin: 16px 0 20px 0; /* Add bottom margin to ensure visibility */
+            z-index: 10;
+            flex-shrink: 0; /* Don't shrink the input area */
+        }
+
+        /* Make chat section fill available space when active */
+        #chatSection {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden; /* Prevent overflow */
+        }
+
+        #chatSection .chat-container {
+            flex: 1;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .welcome-message {
+            margin-bottom: 16px;
+        }
+
+        .bot-message, .user-message {
+            margin-bottom: 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .user-message {
+            flex-direction: row-reverse;
+        }
+
+        .message-content {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        .bot-message .message-content {
+            background: var(--primary-bg);
+            border: 1px solid var(--border-light);
+            border-left: 4px solid #005EB8;
+        }
+
+        .user-message .message-content {
+            background: #005EB8;
+            color: white;
+            border-left: 4px solid #00ACED;
+        }
+
+        /* Formatting styles for bot messages */
+        .bot-message .message-content ul {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+
+        .bot-message .message-content li {
+            margin: 4px 0;
+            line-height: 1.5;
+        }
+
+        .bot-message .message-content strong {
+            font-weight: 600;
+            color: #005EB8;
+        }
+
+        .bot-message .message-content em {
+            font-style: italic;
+            color: var(--text-secondary);
+        }
+
+        .message-sources {
+            margin-top: 12px;
+            padding: 8px 12px;
+            background: var(--tertiary-bg);
+            border-radius: var(--radius-sm);
+            border-left: 3px solid #54AD18;
+        }
+
+        .source-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+            margin-bottom: 6px;
+        }
+
+        .source-item {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            transition: all 0.15s ease;
+        }
+
+        .source-item:hover {
+            background: #005EB8;
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .source-item:last-child {
+            margin-bottom: 0;
+        }
+
+
+        .chat-input-container {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+            margin-bottom: 12px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            line-height: 1.5;
+            background: var(--primary-bg);
+            resize: none;
+            min-height: 48px;
+            max-height: 120px;
+            font-family: inherit;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #005EB8;
+            box-shadow: 0 0 0 3px rgba(0, 94, 184, 0.1);
+        }
+
+        .send-chat-btn {
+            background: #005EB8;
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            width: 48px;
+            height: 48px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.15s ease;
+            flex-shrink: 0;
+        }
+
+        .send-chat-btn:hover {
+            background: #00ACED;
+        }
+
+        .send-chat-btn:disabled {
+            background: var(--border-medium);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .send-icon {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .chat-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .clear-chat-btn {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-medium);
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .clear-chat-btn:hover {
+            background: #EF3340;
+            color: white;
+            border-color: #EF3340;
+        }
+
+        .conversation-info {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: var(--tertiary-bg);
+            border-radius: var(--radius-md);
+            border-left: 4px solid #005EB8;
+            margin-bottom: 16px;
+            font-style: italic;
+            color: var(--text-secondary);
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: #005EB8;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                opacity: 0.3;
+                transform: scale(1);
+            }
+            30% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+        }
+
+        /* Error message styles */
+        .error-message {
+            background: #FFB2BE !important;
+            color: #EF3340 !important;
+            border-left: 4px solid #EF3340 !important;
+        }
+
+        /* Sample questions styles */
+        .sample-questions {
+            margin-top: 16px;
+            padding: 16px;
+            background: var(--tertiary-bg);
+            border-radius: var(--radius-md);
+            border-left: 4px solid #005EB8;
+        }
+
+        .sample-questions-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+            margin-bottom: 12px;
+        }
+
+        .sample-question-item {
+            display: block;
+            width: 100%;
+            background: var(--primary-bg);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-align: left;
+            line-height: 1.4;
+        }
+
+        .sample-question-item:hover {
+            background: #005EB8;
+            color: white;
+            border-color: #005EB8;
+            transform: translateX(4px);
+        }
+
+        .sample-question-item:last-child {
+            margin-bottom: 0;
+        }
+
         /* Responsive design */
         @media (max-width: 768px) {
             .container {
@@ -799,6 +1160,15 @@
             .resizer::after {
                 width: 20px;
                 height: 2px;
+            }
+
+            .chat-messages {
+                min-height: 300px;
+                max-height: 400px;
+            }
+
+            .message-content {
+                max-width: 90%;
             }
         }
     </style>
@@ -822,6 +1192,7 @@
                 <div class="search-mode-toggle">
                     <button id="carModeBtn" class="mode-btn active">CAR References</button>
                     <button id="semanticModeBtn" class="mode-btn">Semantic Search</button>
+                    <button id="chatModeBtn" class="mode-btn">AI Chat</button>
                 </div>
 
                 <!-- CAR Search Section -->
@@ -875,6 +1246,38 @@
                     
                     <div class="semantic-status" id="semanticStatus" style="display: none;">
                         Searching...
+                    </div>
+                </div>
+
+                <!-- AI Chat Section -->
+                <div id="chatSection" class="search-section" style="display: none;">
+                    <div class="chat-container">
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="welcome-message">
+                                <div class="bot-message">
+                                    <div class="message-content">
+                                        <strong>🤖 AI Assistant</strong><br>
+                                        Hello! I'm your AI assistant. I can help you explore the ICC judgment document and answer questions about it. What would you like to know?
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chat-input-section">
+                            <div class="chat-input-container">
+                                <textarea id="chatInput" class="chat-input" 
+                                         placeholder="Ask me anything about the ICC judgment..." 
+                                         rows="2"></textarea>
+                                <button id="sendChatBtn" class="send-chat-btn">
+                                    <span class="send-icon">➤</span>
+                                </button>
+                            </div>
+                            <div class="chat-controls">
+                                <button id="clearChatBtn" class="clear-chat-btn">Clear Conversation</button>
+                                <div class="conversation-info">
+                                    <span id="conversationId">Session: new</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -947,9 +1350,14 @@
         let currentZoom = 1.25;
         
         // Semantic search variables
-        let currentSearchMode = 'car'; // 'car' or 'semantic'
+        let currentSearchMode = 'car'; // 'car', 'semantic', or 'chat'
         let semanticResults = null;
         let lastSemanticQuery = '';
+        
+        // Chat variables
+        let chatHistory = [];
+        let conversationId = generateConversationId();
+        let isChatLoading = false;
 
         // PDF.js will be configured when loading the PDF
 
@@ -975,9 +1383,11 @@
             // Mode toggle buttons
             const carModeBtn = document.getElementById('carModeBtn');
             const semanticModeBtn = document.getElementById('semanticModeBtn');
+            const chatModeBtn = document.getElementById('chatModeBtn');
             
             carModeBtn.addEventListener('click', () => switchSearchMode('car'));
             semanticModeBtn.addEventListener('click', () => switchSearchMode('semantic'));
+            chatModeBtn.addEventListener('click', () => switchSearchMode('chat'));
 
             // Semantic search
             const semanticInput = document.getElementById('semanticInput');
@@ -1039,6 +1449,32 @@
                     }
                 });
             }
+
+            // Chat functionality
+            const chatInput = document.getElementById('chatInput');
+            const sendChatBtn = document.getElementById('sendChatBtn');
+            const clearChatBtn = document.getElementById('clearChatBtn');
+            
+            if (chatInput && sendChatBtn) {
+                sendChatBtn.addEventListener('click', sendChatMessage);
+                
+                chatInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendChatMessage();
+                    }
+                });
+                
+                // Auto-resize textarea
+                chatInput.addEventListener('input', function() {
+                    this.style.height = 'auto';
+                    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+                });
+            }
+            
+            if (clearChatBtn) {
+                clearChatBtn.addEventListener('click', clearChatHistory);
+            }
         }
 
         // Helper function to get selected sections
@@ -1054,31 +1490,49 @@
             return selectedSections;
         }
 
-        // Semantic Search Functions
+        // Search Mode Functions
         function switchSearchMode(mode) {
             currentSearchMode = mode;
             
             const carModeBtn = document.getElementById('carModeBtn');
             const semanticModeBtn = document.getElementById('semanticModeBtn');
+            const chatModeBtn = document.getElementById('chatModeBtn');
             const carSection = document.getElementById('carSearchSection');
             const semanticSection = document.getElementById('semanticSearchSection');
+            const chatSection = document.getElementById('chatSection');
             const headerTitle = document.getElementById('headerTitle');
+            const leftPanel = document.querySelector('.left-panel');
+            
+            // Reset all button states
+            carModeBtn.classList.remove('active');
+            semanticModeBtn.classList.remove('active');
+            chatModeBtn.classList.remove('active');
+            
+            // Hide all sections
+            carSection.style.display = 'none';
+            semanticSection.style.display = 'none';
+            chatSection.style.display = 'none';
+            
+            // Remove chat-active class from left panel
+            leftPanel.classList.remove('chat-active');
             
             if (mode === 'car') {
                 carModeBtn.classList.add('active');
-                semanticModeBtn.classList.remove('active');
                 carSection.style.display = 'block';
-                semanticSection.style.display = 'none';
                 headerTitle.textContent = 'CAR References Explorer';
+                
+                // Show text blocks area
+                document.getElementById('textBlocks').style.display = 'block';
                 
                 // Restore CAR search results
                 updateTextBlocks();
-            } else {
-                carModeBtn.classList.remove('active');
+            } else if (mode === 'semantic') {
                 semanticModeBtn.classList.add('active');
-                carSection.style.display = 'none';
                 semanticSection.style.display = 'block';
                 headerTitle.textContent = 'Semantic Search Explorer';
+                
+                // Show text blocks area
+                document.getElementById('textBlocks').style.display = 'block';
                 
                 // Show semantic results if available
                 if (semanticResults) {
@@ -1086,6 +1540,13 @@
                 } else {
                     showSemanticWelcome();
                 }
+            } else if (mode === 'chat') {
+                chatModeBtn.classList.add('active');
+                chatSection.style.display = 'block';
+                headerTitle.textContent = 'AI Chat Assistant';
+                
+                // Show chat interface
+                showChatInterface();
             }
         }
 
@@ -1658,6 +2119,7 @@
                 
                 // Set the required CSS variable for text layer scaling
                 textLayer.style.setProperty('--scale-factor', viewport.scale);
+                pageWrapper.style.setProperty('--scale-factor', viewport.scale);
                 
                 // Store page data for reference
                 window.currentPageData = {
@@ -1963,6 +2425,362 @@
         function showError(message) {
             document.getElementById('textBlocks').innerHTML = `<div class="no-results">❌ ${message}</div>`;
             document.getElementById('pdf-viewer').innerHTML = `<div class="no-results">❌ ${message}</div>`;
+        }
+
+        // Chat Functions
+        function generateConversationId() {
+            return 'session_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        function showChatInterface() {
+            const textBlocksContainer = document.getElementById('textBlocks');
+            const headerStats = document.getElementById('headerStats');
+            const leftPanel = document.querySelector('.left-panel');
+            
+            // Clear header stats for chat mode
+            headerStats.textContent = '';
+            
+            // Add chat-active class to left panel for CSS targeting
+            leftPanel.classList.add('chat-active');
+            
+            // Update conversation ID display
+            document.getElementById('conversationId').textContent = `Session: ${conversationId}`;
+            
+            // Add sample questions to chat if it's empty (only welcome message)
+            addSampleQuestions();
+        }
+
+        async function sendChatMessage() {
+            const chatInput = document.getElementById('chatInput');
+            const message = chatInput.value.trim();
+            
+            if (!message || isChatLoading) {
+                return;
+            }
+            
+            // Clear input
+            chatInput.value = '';
+            chatInput.style.height = 'auto';
+            
+            // Remove sample questions if they exist (conversation is starting)
+            const sampleQuestions = document.getElementById('chatMessages').querySelector('.sample-questions');
+            if (sampleQuestions) {
+                sampleQuestions.remove();
+            }
+            
+            // Add user message to chat
+            addMessageToChat('user', message);
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            try {
+                isChatLoading = true;
+                
+                // Call RAG endpoint
+                const response = await callRAGEndpoint(message);
+                
+                // Remove typing indicator
+                removeTypingIndicator();
+                
+                // Add bot response to chat
+                addMessageToChat('bot', response.response, response.sources);
+                
+                // Store conversation
+                chatHistory.push({
+                    user: message,
+                    bot: response.response,
+                    sources: response.sources,
+                    timestamp: new Date().toISOString()
+                });
+                
+            } catch (error) {
+                console.error('Chat error:', error);
+                removeTypingIndicator();
+                
+                let errorMessage = error.message;
+                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    errorMessage = `Unable to connect to the AI service. Please make sure:
+                    1. The proxy server is running on port 8002
+                    2. Your Databricks token is properly configured
+                    3. You have internet connection
+                    
+                    Technical error: ${error.message}`;
+                }
+                
+                addMessageToChat('bot', errorMessage, null, true);
+            } finally {
+                isChatLoading = false;
+            }
+        }
+
+        async function callRAGEndpoint(query) {
+            // Use the local proxy to avoid CORS issues
+            const proxyUrl = 'http://127.0.0.1:8002/rag-chat';
+            
+            const requestData = {
+                query: [query],
+                num_results: [10],
+                conversation_id: [conversationId]
+            };
+            
+            console.log('🔄 Calling RAG endpoint via proxy:', {
+                url: proxyUrl,
+                query: query,
+                conversation_id: conversationId
+            });
+            
+            const response = await fetch(proxyUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            });
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('❌ Proxy error:', response.status, errorText);
+                throw new Error(`RAG proxy error: ${response.status} - ${errorText}`);
+            }
+            
+            const result = await response.json();
+            console.log('✅ RAG response received:', result);
+            
+            // Handle error responses from proxy
+            if (result.error) {
+                throw new Error(result.error);
+            }
+            
+            // Handle Databricks response format with predictions array
+            if (result && result.predictions && Array.isArray(result.predictions)) {
+                // The predictions array contains response objects directly
+                if (result.predictions.length > 0) {
+                    const firstPrediction = result.predictions[0];
+                    
+                    // Check if it's a response object with the expected structure
+                    if (firstPrediction && firstPrediction.response) {
+                        console.log('📝 Successfully extracted RAG response:', {
+                            response_length: firstPrediction.response.length,
+                            sources_count: firstPrediction.sources ? firstPrediction.sources.length : 0,
+                            conversation_id: firstPrediction.conversation_id
+                        });
+                        return firstPrediction;
+                    }
+                }
+            }
+            
+            // Handle direct array response
+            if (result && Array.isArray(result) && result.length > 0) {
+                return result[0];
+            } 
+            
+            // Handle direct response format
+            if (result && result.response) {
+                return result;
+            }
+            
+            console.error('❌ Unexpected response format:', result);
+            throw new Error('Invalid response format from RAG endpoint');
+        }
+
+        function getDatabricksToken() {
+            // Try to get token from window global or use a placeholder
+            return window.DATABRICKS_TOKEN || 'your-databricks-token-here';
+        }
+
+        function addMessageToChat(sender, content, sources = null, isError = false) {
+            const chatMessages = document.getElementById('chatMessages');
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = sender === 'user' ? 'user-message' : 'bot-message';
+            
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            
+            if (isError) {
+                messageContent.className += ' error-message';
+            }
+            
+            if (sender === 'user') {
+                messageContent.textContent = content;
+            } else {
+                // Convert markdown-like formatting to HTML
+                let formattedContent = content
+                    // Convert bullet points (*, -, +) to HTML lists
+                    .replace(/^\s*[\*\-\+]\s+(.+)$/gm, '<li>$1</li>')
+                    // Convert bold text (**text** or __text__)
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/__(.*?)__/g, '<strong>$1</strong>')
+                    // Convert italic text (*text* or _text_)
+                    .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+                    .replace(/_([^_]+)_/g, '<em>$1</em>')
+                    // Convert line breaks
+                    .replace(/\n/g, '<br>');
+                
+                // Wrap consecutive list items in <ul> tags
+                formattedContent = formattedContent.replace(/(<li>.*?<\/li>)(?:\s*<br>\s*<li>.*?<\/li>)*/g, function(match) {
+                    // Remove <br> tags between list items and wrap in <ul>
+                    const cleanedMatch = match.replace(/<br>\s*/g, '');
+                    return '<ul>' + cleanedMatch + '</ul>';
+                });
+                
+                messageContent.innerHTML = formattedContent;
+                
+                // Add sources if available
+                if (sources && sources.length > 0) {
+                    const sourcesDiv = document.createElement('div');
+                    sourcesDiv.className = 'message-sources';
+                    
+                    const sourcesTitle = document.createElement('div');
+                    sourcesTitle.className = 'source-title';
+                    sourcesTitle.textContent = 'Sources:';
+                    sourcesDiv.appendChild(sourcesTitle);
+                    
+                    sources.forEach((source, index) => {
+                        const sourceItem = document.createElement('div');
+                        sourceItem.className = 'source-item';
+                        
+                        // Format the source display
+                        const sectionText = source.section || 'Document';
+                        const pagesText = source.pages || 'Unknown';
+                        const relevanceText = source.relevance ? `${(source.relevance * 100).toFixed(1)}%` : 'N/A';
+                        
+                        sourceItem.innerHTML = `📄 ${sectionText} - Pages ${pagesText} (${relevanceText} relevance)`;
+                        
+                        // Make source clickable to navigate to page
+                        if (source.pages) {
+                            sourceItem.style.cursor = 'pointer';
+                            sourceItem.addEventListener('click', () => {
+                                // Handle page ranges like "1608-1608" or "1614-1615"
+                                const pageMatch = source.pages.match(/(\d+)/);
+                                if (pageMatch) {
+                                    const pageNumber = parseInt(pageMatch[1]);
+                                    console.log(`🔗 Navigating to page ${pageNumber} from source: ${sectionText}`);
+                                    navigateToPDFPage(pageNumber);
+                                }
+                            });
+                        }
+                        
+                        sourcesDiv.appendChild(sourceItem);
+                    });
+                    
+                    messageContent.appendChild(sourcesDiv);
+                }
+            }
+            
+            messageDiv.appendChild(messageContent);
+            chatMessages.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const chatMessages = document.getElementById('chatMessages');
+            
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing-indicator';
+            typingDiv.id = 'typingIndicator';
+            
+            typingDiv.innerHTML = `
+                AI is thinking
+                <div class="typing-dots">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            `;
+            
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        function clearChatHistory() {
+            if (confirm('Are you sure you want to clear the conversation?')) {
+                chatHistory = [];
+                conversationId = generateConversationId();
+                
+                // Clear chat messages except welcome
+                const chatMessages = document.getElementById('chatMessages');
+                chatMessages.innerHTML = `
+                    <div class="welcome-message">
+                        <div class="bot-message">
+                            <div class="message-content">
+                                <strong>🤖 AI Assistant</strong><br>
+                                Hello! I'm your AI assistant. I can help you explore the ICC judgment document and answer questions about it. What would you like to know?
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Add sample questions
+                addSampleQuestions();
+                
+                // Update session ID
+                document.getElementById('conversationId').textContent = `Session: ${conversationId}`;
+            }
+        }
+
+        function addSampleQuestions() {
+            const chatMessages = document.getElementById('chatMessages');
+            
+            // Check if sample questions already exist
+            if (chatMessages.querySelector('.sample-questions')) {
+                return;
+            }
+            
+            // Only add if we just have the welcome message (no conversation started)
+            const messageCount = chatMessages.querySelectorAll('.user-message, .bot-message:not(.welcome-message .bot-message)').length;
+            if (messageCount > 0) {
+                return;
+            }
+            
+            const sampleQuestions = [
+                "What role did Alfred Yekatom play in the Anti-Balaka forces?",
+                "What evidence was presented about persecution of Muslims?",
+                "What were the main findings regarding war crimes?",
+                "Tell me about the court's verdict on crimes against humanity",
+                "What was the timeline of events in the Central African Republic?",
+                "How did the court evaluate witness testimonies?"
+            ];
+            
+            const sampleQuestionsDiv = document.createElement('div');
+            sampleQuestionsDiv.className = 'sample-questions';
+            
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'sample-questions-title';
+            titleDiv.textContent = 'Try these sample questions:';
+            sampleQuestionsDiv.appendChild(titleDiv);
+            
+            sampleQuestions.forEach(question => {
+                const questionButton = document.createElement('button');
+                questionButton.className = 'sample-question-item';
+                questionButton.textContent = question;
+                questionButton.addEventListener('click', () => {
+                    // Fill the input with the question
+                    const chatInput = document.getElementById('chatInput');
+                    chatInput.value = question;
+                    chatInput.focus();
+                    
+                    // Auto-resize the textarea
+                    chatInput.style.height = 'auto';
+                    chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
+                });
+                sampleQuestionsDiv.appendChild(questionButton);
+            });
+            
+            chatMessages.appendChild(sampleQuestionsDiv);
+            
+            // Scroll to show the sample questions
+            chatMessages.scrollTop = chatMessages.scrollHeight;
         }
     </script>
 </body>

@@ -31,6 +31,7 @@ class SemanticSearchProxy:
         
         # Databricks configuration
         self.databricks_url = 'https://dbc-0619d7f5-0bda.cloud.databricks.com/serving-endpoints/icc-intelligence/invocations'
+        self.rag_url = 'https://dbc-0619d7f5-0bda.cloud.databricks.com/serving-endpoints/icc-rag-chatbot/invocations'
         self.databricks_token = os.getenv('DATABRICKS_TOKEN', 'your-databricks-token-here')
         
         self.setup_routes()
@@ -61,6 +62,27 @@ class SemanticSearchProxy:
             except Exception as e:
                 print(f"Semantic search error: {e}")
                 return jsonify({'error': f"Semantic search failed: {str(e)}"}), 500
+
+        @self.app.route('/rag-chat', methods=['POST'])
+        def rag_chat():
+            try:
+                data = request.get_json()
+                if not data or 'query' not in data:
+                    return jsonify({'error': 'Query parameter is required'}), 400
+                
+                query = data['query']
+                num_results = data.get('num_results', [10])
+                conversation_id = data.get('conversation_id', ['session_001'])
+                
+                print(f"Processing RAG chat query: {query}")
+                
+                # Call Databricks RAG API
+                result = self.call_rag_api(query, num_results, conversation_id)
+                return jsonify(result)
+                
+            except Exception as e:
+                print(f"RAG chat error: {e}")
+                return jsonify({'error': f"RAG chat failed: {str(e)}"}), 500
 
         @self.app.route('/health', methods=['GET'])
         def health_check():
@@ -96,6 +118,46 @@ class SemanticSearchProxy:
         print(f"Databricks API responded successfully with {len(result.get('predictions', [[]])[0])} results")
         return result
     
+    def call_rag_api(self, query, num_results=[10], conversation_id=['session_001']):
+        """Call the Databricks RAG Chatbot API"""
+        # Ensure query is a list and extract first element if it's nested
+        if isinstance(query, list) and len(query) > 0:
+            query_text = query[0]
+        else:
+            query_text = str(query)
+        
+        # Ensure num_results and conversation_id are single values
+        num_results_val = num_results[0] if isinstance(num_results, list) else num_results
+        conversation_id_val = conversation_id[0] if isinstance(conversation_id, list) else conversation_id
+        
+        request_data = {
+            "dataframe_split": {
+                "columns": ["query", "num_results", "conversation_id"],
+                "data": [[query_text, num_results_val, conversation_id_val]]
+            }
+        }
+        
+        headers = {
+            'Authorization': f'Bearer {self.databricks_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        response = requests.post(
+            self.rag_url,
+            headers=headers,
+            json=request_data,
+            timeout=30
+        )
+        
+        if not response.ok:
+            error_msg = f"Databricks RAG API error: {response.status_code} - {response.text}"
+            print(error_msg)
+            raise Exception(error_msg)
+        
+        result = response.json()
+        print(f"Databricks RAG API responded successfully")
+        return result
+    
     def start(self):
         """Start the Flask proxy server"""
         try:
@@ -126,7 +188,11 @@ class SemanticSearchProxy:
             try:
                 test_response = requests.get(f'http://127.0.0.1:{self.port}/health', timeout=2)
                 if test_response.status_code == 200:
-                    print(f"✅ Semantic search proxy ready on port {self.port}")
+                    print(f"✅ Semantic search & RAG chat proxy ready on port {self.port}")
+                    print(f"📡 Available endpoints:")
+                    print(f"   - /semantic-search (for document search)")
+                    print(f"   - /rag-chat (for AI chatbot)")
+                    print(f"   - /health (status check)")
                     return True
             except:
                 pass

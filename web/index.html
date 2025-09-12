@@ -143,10 +143,13 @@
             border: 1px solid var(--border-medium);
             border-radius: var(--radius-md);
             font-size: 14px;
+            line-height: 1.5;
             margin-bottom: 20px;
             background: var(--primary-bg);
             transition: border-color 0.15s ease, box-shadow 0.15s ease;
             position: relative;
+            height: 48px; /* Fixed height for consistent centering */
+            box-sizing: border-box;
         }
 
         .filter-input:focus {
@@ -171,6 +174,8 @@
 
         .filter-container {
             position: relative;
+            display: flex;
+            align-items: center;
         }
 
         .search-mode-toggle {
@@ -249,13 +254,13 @@
         .inline-toggle {
             position: absolute;
             right: 16px;
-            top: 0;
-            bottom: 0;
+            top: 12px; /* Same as input top padding */
+            bottom: 12px; /* Same as input bottom padding */
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
             z-index: 10;
-            height: 100%;
         }
 
         .toggle-label-inline {
@@ -330,6 +335,65 @@
         .filter-container:has(.toggle-input-inline:checked) .filter-input {
             border-color: var(--primary-color);
             box-shadow: 0 0 0 1px rgba(0, 94, 184, 0.15);
+        }
+
+        .section-filter {
+            margin-top: 16px;
+            padding: 12px;
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+        }
+
+        .filter-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .filter-icon {
+            font-size: 14px;
+        }
+
+        .filter-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .filter-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .filter-tag {
+            padding: 4px 10px;
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            font-size: 11px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            user-select: none;
+        }
+
+        .filter-tag:hover {
+            border-color: var(--primary-color);
+            color: var(--text-primary);
+        }
+
+        .filter-tag.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .filter-tag.active:hover {
+            background: #0083d1;
         }
 
         .reference-count {
@@ -782,6 +846,22 @@
                     </div>
                     <button id="semanticSearchBtn" class="semantic-search-btn">Search</button>
                     
+                    <div class="section-filter" id="sectionFilter" style="display: none;">
+                        <div class="filter-header">
+                            <span class="filter-icon">🏷️</span>
+                            <span class="filter-title">Filter by Section Type:</span>
+                        </div>
+                        <div class="filter-options">
+                            <button class="filter-tag active" data-section="ALL">All</button>
+                            <button class="filter-tag" data-section="VERDICT">Verdict</button>
+                            <button class="filter-tag" data-section="SENTENCE">Sentence</button>
+                            <button class="filter-tag" data-section="FINDINGS_OF_FACT">Findings of Fact</button>
+                            <button class="filter-tag" data-section="OVERVIEW">Overview</button>
+                            <button class="filter-tag" data-section="EVIDENTIARY_CONSIDERATIONS">Evidentiary Considerations</button>
+                            <button class="filter-tag" data-section="HEADER">Header</button>
+                        </div>
+                    </div>
+                    
                     <div class="semantic-status" id="semanticStatus" style="display: none;">
                         Searching...
                     </div>
@@ -908,6 +988,25 @@
                     if (lastSemanticQuery) {
                         console.log(`🔄 Toggle changed, re-running search: "${lastSemanticQuery}" with get_all=${this.checked}`);
                         performSemanticSearch();
+                    }
+                });
+            }
+
+            // Handle section filter clicks
+            const sectionFilter = document.getElementById('sectionFilter');
+            if (sectionFilter) {
+                sectionFilter.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('filter-tag')) {
+                        const selectedSection = e.target.getAttribute('data-section');
+                        
+                        // Update active state
+                        sectionFilter.querySelectorAll('.filter-tag').forEach(tag => {
+                            tag.classList.remove('active');
+                        });
+                        e.target.classList.add('active');
+                        
+                        // Filter and display results
+                        filterSemanticResults(selectedSection);
                     }
                 });
             }
@@ -1100,11 +1199,23 @@
         function displaySemanticResults() {
             const textBlocksContainer = document.getElementById('textBlocks');
             const headerStats = document.getElementById('headerStats');
+            const sectionFilter = document.getElementById('sectionFilter');
             
             if (!semanticResults || semanticResults.length === 0) {
                 textBlocksContainer.innerHTML = '<div class="no-results">No semantic search results found. Try a different query.</div>';
                 headerStats.textContent = 'No results found';
+                sectionFilter.style.display = 'none';
                 return;
+            }
+            
+            // Show section filter when we have results
+            sectionFilter.style.display = 'block';
+            
+            // Reset filter to "All" and display all results
+            const allFilter = sectionFilter.querySelector('[data-section="ALL"]');
+            if (allFilter) {
+                sectionFilter.querySelectorAll('.filter-tag').forEach(tag => tag.classList.remove('active'));
+                allFilter.classList.add('active');
             }
             
             // Clear header stats for semantic search mode
@@ -1116,6 +1227,37 @@
                 const blockElement = createSemanticBlockElement(result, index);
                 textBlocksContainer.appendChild(blockElement);
             });
+        }
+
+        function filterSemanticResults(sectionType) {
+            const textBlocksContainer = document.getElementById('textBlocks');
+            
+            if (!semanticResults || semanticResults.length === 0) {
+                return;
+            }
+            
+            // Filter results based on section type
+            let filteredResults = semanticResults;
+            if (sectionType !== 'ALL') {
+                filteredResults = semanticResults.filter(result => 
+                    result.section_type === sectionType
+                );
+            }
+            
+            // Clear and display filtered results
+            textBlocksContainer.innerHTML = '';
+            
+            if (filteredResults.length === 0) {
+                textBlocksContainer.innerHTML = `<div class="no-results">No results found for section type: ${sectionType}</div>`;
+                return;
+            }
+            
+            filteredResults.forEach((result, index) => {
+                const blockElement = createSemanticBlockElement(result, index);
+                textBlocksContainer.appendChild(blockElement);
+            });
+            
+            console.log(`🏷️ Filtered results: ${filteredResults.length} of ${semanticResults.length} for section type: ${sectionType}`);
         }
 
         function createSemanticBlockElement(result, index) {

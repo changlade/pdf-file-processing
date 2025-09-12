@@ -66,8 +66,8 @@ class SemanticSearchProxy:
         """Call the Databricks Vector Search API"""
         request_data = {
             "dataframe_split": {
-                "columns": ["query"],
-                "data": [[query]]
+                "columns": ["query", "num_results"],
+                "data": [[query, 20]]
             }
         }
         

@@ -34,8 +34,8 @@ def semantic_search():
         # Prepare request to Databricks
         databricks_data = {
             "dataframe_split": {
-                "columns": ["query"],
-                "data": [[query]]
+                "columns": ["query", "num_results"],
+                "data": [[query, 20]]
             }
         }
         

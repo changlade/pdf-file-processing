@@ -83,8 +83,8 @@ class SemanticSearchHandler(BaseHTTPRequestHandler):
         # Prepare the data in the format expected by Databricks
         request_data = {
             "dataframe_split": {
-                "columns": ["query"],
-                "data": [[query]]
+                "columns": ["query", "num_results"],
+                "data": [[query, 20]]
             }
         }
         

@@ -139,7 +139,7 @@
 
         .filter-input {
             width: 100%;
-            padding: 12px 16px 12px 44px;
+            padding: 12px 60px 12px 44px; /* Extra padding on right for toggle */
             border: 1px solid var(--border-medium);
             border-radius: var(--radius-md);
             font-size: 14px;
@@ -247,9 +247,13 @@
         }
 
         .inline-toggle {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
             display: flex;
             align-items: center;
-            margin-left: 8px;
+            z-index: 10;
         }
 
         .toggle-switch-inline {
@@ -266,26 +270,27 @@
 
         .toggle-slider-inline {
             position: relative;
-            width: 36px;
-            height: 18px;
-            background: #ccc;
-            border-radius: 18px;
+            width: 32px;
+            height: 16px;
+            background: #ddd;
+            border-radius: 16px;
             transition: all 0.3s ease;
-            border: 1px solid var(--border-light);
+            border: 1px solid var(--border-medium);
             display: block;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .toggle-slider-inline:before {
             content: '';
             position: absolute;
-            top: 2px;
-            left: 2px;
+            top: 1px;
+            left: 1px;
             width: 12px;
             height: 12px;
             background: white;
             border-radius: 50%;
             transition: all 0.3s ease;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
 
         .toggle-input-inline:checked + .toggle-slider-inline {
@@ -294,7 +299,7 @@
         }
 
         .toggle-input-inline:checked + .toggle-slider-inline:before {
-            transform: translateX(18px);
+            transform: translateX(16px);
             box-shadow: 0 1px 3px rgba(0, 94, 184, 0.5);
         }
 
@@ -306,10 +311,10 @@
             background: #0083d1;
         }
 
-        /* Visual indicator when toggle is active */
-        .filter-container:has(.toggle-input-inline:checked) {
+        /* Visual indicator when toggle is active - subtle input field highlight */
+        .filter-container:has(.toggle-input-inline:checked) .filter-input {
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 1px rgba(0, 94, 184, 0.2);
+            box-shadow: 0 0 0 1px rgba(0, 94, 184, 0.15);
         }
 
         .reference-count {
@@ -731,18 +736,18 @@
 
                 <!-- CAR Search Section -->
                 <div id="carSearchSection" class="search-section">
-                    <div class="filter-container">
-                        <span class="search-icon">🔍</span>
-                        <input type="text" id="searchInput" class="filter-input" 
-                               placeholder="Search CAR references (e.g., CAR-D29, CAR-OTP, CAR-V45)...">
-                    </div>
-                    
-                    <div class="reference-count" id="referenceCount">
-                        Loading references...
-                    </div>
-                    
-                    <div class="reference-list" id="referenceList">
-                        <!-- Reference tags will be populated here -->
+                <div class="filter-container">
+                    <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" class="filter-input" 
+                           placeholder="Search CAR references (e.g., CAR-D29, CAR-OTP, CAR-V45)...">
+                </div>
+                
+                <div class="reference-count" id="referenceCount">
+                    Loading references...
+                </div>
+                
+                <div class="reference-list" id="referenceList">
+                    <!-- Reference tags will be populated here -->
                     </div>
                 </div>
 
@@ -854,9 +859,9 @@
             const searchInput = document.getElementById('searchInput');
             searchInput.addEventListener('input', function() {
                 if (currentSearchMode === 'car') {
-                    currentFilter = this.value.toLowerCase();
-                    filterReferences();
-                    updateTextBlocks();
+                currentFilter = this.value.toLowerCase();
+                filterReferences();
+                updateTextBlocks();
                 }
             });
 

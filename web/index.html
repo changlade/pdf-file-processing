@@ -100,7 +100,7 @@
             background: var(--tertiary-bg);
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            overflow: visible;
             min-width: 500px;
         }
 
@@ -604,6 +604,7 @@
             display: flex;
             flex-direction: column;
             background: #2d3748;
+            min-height: 0; /* Allow flex item to shrink below content size */
         }
 
         .pdf-toolbar {
@@ -668,15 +669,45 @@
             overflow: auto;
             background: #2d3748;
             position: relative;
+            /* Enable smooth scrolling */
+            scroll-behavior: smooth;
+            /* Add custom scrollbar styling */
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-medium) var(--tertiary-bg);
+        }
+
+        /* Custom scrollbar for webkit browsers */
+        .pdf-viewer-container::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        .pdf-viewer-container::-webkit-scrollbar-track {
+            background: var(--tertiary-bg);
+            border-radius: 4px;
+        }
+
+        .pdf-viewer-container::-webkit-scrollbar-thumb {
+            background: var(--border-medium);
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+        }
+
+        .pdf-viewer-container::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-orange);
         }
 
         #pdf-viewer {
             width: 100%;
-            height: 100%;
+            min-height: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
             padding: 20px;
+            /* Allow content to expand beyond viewport height */
+            box-sizing: border-box;
+            /* Ensure the viewer can grow with its content */
+            flex-shrink: 0;
         }
 
         .pdf-page-canvas {
@@ -689,11 +720,17 @@
 
         /* PDF.js text layer styling for proper text selection */
         .textLayer {
-            opacity: 0.2; /* Controls text layer opacity (so text is selectable but mostly invisible) */
+            opacity: 0.1; /* Reduced opacity for better text visibility while maintaining selection */
             user-select: text;
             -webkit-user-select: text;
             -moz-user-select: text;
             -ms-user-select: text;
+            font-family: 'Times New Roman', 'Times', serif; /* Better font for legal documents */
+            font-size: inherit;
+            line-height: 1.2;
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         .textLayer span {
@@ -987,7 +1024,9 @@
         }
 
         .sources-container {
-            /* Container for source items */
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
 
         /* Clickable source references within answer text */
@@ -2213,12 +2252,29 @@
                 
                 const viewport = page.getViewport({ scale: scale });
                 
-                // Create canvas
+                // Create canvas with high-DPI support
                 const canvas = document.createElement('canvas');
                 canvas.className = 'pdf-page-canvas';
                 const context = canvas.getContext('2d');
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
+                
+                // Get device pixel ratio for high-DPI displays
+                const devicePixelRatio = window.devicePixelRatio || 1;
+                const qualityMultiplier = Math.max(1, devicePixelRatio);
+                
+                // Set canvas size for high-DPI rendering
+                canvas.width = viewport.width * qualityMultiplier;
+                canvas.height = viewport.height * qualityMultiplier;
+                
+                // Scale the canvas back down using CSS
+                canvas.style.width = viewport.width + 'px';
+                canvas.style.height = viewport.height + 'px';
+                
+                // Scale the drawing context so everything draws at the higher resolution
+                context.scale(qualityMultiplier, qualityMultiplier);
+                
+                // Enable high-quality image rendering
+                context.imageSmoothingEnabled = true;
+                context.imageSmoothingQuality = 'high';
                 
                 // Create text layer for text selection (using PDF.js standard class name)
                 const textLayer = document.createElement('div');

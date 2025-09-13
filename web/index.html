@@ -1448,7 +1448,10 @@
             setupEventListeners();
             setupResizer();
             setupPDFControls();
-            
+
+            // Ping endpoints to warm them up
+            pingDatabricksEndpoints();
+
             // Auto-switch to chat mode on mobile devices
             if (isMobileDevice()) {
                 switchSearchMode('chat');
@@ -1713,15 +1716,34 @@
                 
             } catch (error) {
                 console.error('Semantic search error:', error);
-                statusDiv.textContent = 'Search failed: ' + error.message;
-                statusDiv.style.color = '#e74c3c';
                 
-                textBlocksContainer.innerHTML = `
-                    <div class="no-results" style="color: #e74c3c;">
-                        ❌ Search failed: ${error.message}
-                        <br><small>Check your connection and try again</small>
-                    </div>
-                `;
+                // Handle endpoint starting error with user-friendly message
+                if (error.message === 'ENDPOINT_STARTING' || 
+                    error.message.includes('Read timed out') || 
+                    error.message.includes('HTTPSConnectionPool') ||
+                    error.message.includes('dbc-0619d7f5-0bda.cloud.databricks.com')) {
+                    
+                    statusDiv.textContent = 'Search endpoint is starting up...';
+                    statusDiv.style.color = '#f39c12';
+                    
+                    textBlocksContainer.innerHTML = `
+                        <div class="no-results" style="color: #f39c12;">
+                            🚀 The search endpoint is currently starting up. This usually takes about 30 seconds.
+                            <br><br>
+                            Please wait a moment and try your search again. The service will be ready shortly!
+                        </div>
+                    `;
+                } else {
+                    statusDiv.textContent = 'Search failed: ' + error.message;
+                    statusDiv.style.color = '#e74c3c';
+                    
+                    textBlocksContainer.innerHTML = `
+                        <div class="no-results" style="color: #e74c3c;">
+                            ❌ Search failed: ${error.message}
+                            <br><small>Check your connection and try again</small>
+                        </div>
+                    `;
+                }
             } finally {
                 searchBtn.disabled = false;
             }
@@ -1757,10 +1779,33 @@
             
             if (!response.ok) {
                 const errorText = await response.text();
+                
+                // Check if it's a 503 status (service unavailable) which indicates endpoint starting
+                if (response.status === 503) {
+                    try {
+                        const errorData = JSON.parse(errorText);
+                        if (errorData.error === 'ENDPOINT_STARTING') {
+                            throw new Error('ENDPOINT_STARTING');
+                        }
+                    } catch (parseError) {
+                        // If we can't parse the error, fall through to generic error
+                    }
+                }
+                
                 throw new Error(`Proxy request failed: ${response.status} - ${errorText}`);
             }
             
             const result = await response.json();
+            
+            // Handle error responses from proxy
+            if (result.error) {
+                // Check for endpoint starting error
+                if (result.error === 'ENDPOINT_STARTING') {
+                    throw new Error('ENDPOINT_STARTING');
+                }
+                throw new Error(result.error);
+            }
+            
             return result;
         }
 
@@ -2061,6 +2106,38 @@
             }
         }
 
+        async function pingDatabricksEndpoints() {
+            console.log('🚀 Pinging Databricks endpoints to warm them up...');
+
+            try {
+                const response = await fetch('/ping-endpoints', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+                console.log('📡 Endpoint ping results:', result);
+
+                if (result.semantic_search?.status === 'success') {
+                    console.log('✅ Semantic search endpoint is ready');
+                } else {
+                    console.warn('⚠️ Semantic search endpoint ping failed:', result.semantic_search?.error);
+                }
+
+                if (result.rag_chat?.status === 'success') {
+                    console.log('✅ RAG chat endpoint is ready');
+                } else {
+                    console.warn('⚠️ RAG chat endpoint ping failed:', result.rag_chat?.error);
+                }
+
+            } catch (error) {
+                console.error('❌ Failed to ping endpoints:', error);
+                console.log('   Endpoints may take longer to respond on first use');
+            }
+        }
+
         async function loadData() {
             try {
                 // Load references data
@@ -2089,7 +2166,8 @@
                 // Set PDF.js worker
                 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
                 
-                const pdfUrl = './jugement.pdf';
+                // Always load PDF from the data folder via the Flask route
+                const pdfUrl = '/data/jugement.pdf';
                 console.log('Loading PDF from:', pdfUrl);
                 
                 pdfDoc = await pdfjsLib.getDocument(pdfUrl).promise;
@@ -2107,26 +2185,7 @@
                 
             } catch (error) {
                 console.error('Error loading PDF:', error);
-                
-                // Try alternative path
-                try {
-                    const altPdfUrl = '../data/jugement.pdf';
-                    console.log('Trying alternative PDF path:', altPdfUrl);
-                    
-                    pdfDoc = await pdfjsLib.getDocument(altPdfUrl).promise;
-                    totalPages = pdfDoc.numPages;
-                    
-                    document.getElementById('page-count').textContent = totalPages;
-                    await renderPage(1);
-                    
-                    console.log('PDF loaded from alternative path:', {
-                        pages: totalPages
-                    });
-                    
-                } catch (altError) {
-                    console.error('Failed to load PDF from both paths:', altError);
-                    showError('Failed to load PDF file. Make sure jugement.pdf is in the correct location.');
-                }
+                showError('Failed to load PDF file. Make sure jugement.pdf is in the data folder.');
             }
         }
 
@@ -2211,6 +2270,8 @@
                 });
                 
                 // Set the required CSS variable for text layer scaling
+                // PDF.js expects this on the container element or higher up in the DOM
+                viewer.style.setProperty('--scale-factor', viewport.scale);
                 textLayer.style.setProperty('--scale-factor', viewport.scale);
                 pageWrapper.style.setProperty('--scale-factor', viewport.scale);
                 
@@ -2589,6 +2650,21 @@
                 removeTypingIndicator();
                 
                 let errorMessage = error.message;
+                
+                // Handle endpoint starting error with user-friendly message
+                if (error.message === 'ENDPOINT_STARTING' || 
+                    error.message.includes('Read timed out') || 
+                    error.message.includes('HTTPSConnectionPool') ||
+                    error.message.includes('dbc-0619d7f5-0bda.cloud.databricks.com')) {
+                    errorMessage = `🚀 The AI endpoint is currently starting up. This usually takes about 30 seconds.
+                    
+Please wait a moment and try your question again. The service will be ready shortly!`;
+                    
+                    // Add a retry button or suggestion
+                    addMessageToChat('bot', errorMessage, null, false);
+                    return; // Don't mark as error since this is expected behavior
+                }
+                
                 if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
                     errorMessage = `Unable to connect to the AI service. Please make sure:
                     1. The proxy server is running on port 8002
@@ -2631,6 +2707,19 @@
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error('❌ Proxy error:', response.status, errorText);
+                
+                // Check if it's a 503 status (service unavailable) which indicates endpoint starting
+                if (response.status === 503) {
+                    try {
+                        const errorData = JSON.parse(errorText);
+                        if (errorData.error === 'ENDPOINT_STARTING') {
+                            throw new Error('ENDPOINT_STARTING');
+                        }
+                    } catch (parseError) {
+                        // If we can't parse the error, fall through to generic error
+                    }
+                }
+                
                 throw new Error(`RAG proxy error: ${response.status} - ${errorText}`);
             }
             
@@ -2639,6 +2728,10 @@
             
             // Handle error responses from proxy
             if (result.error) {
+                // Check for endpoint starting error
+                if (result.error === 'ENDPOINT_STARTING') {
+                    throw new Error('ENDPOINT_STARTING');
+                }
                 throw new Error(result.error);
             }
             

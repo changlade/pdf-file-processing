@@ -7,6 +7,7 @@ Flask web application with semantic search functionality
 import os
 import json
 import requests
+from requests.exceptions import ReadTimeout, ConnectTimeout, Timeout
 from flask import Flask, request, jsonify, send_from_directory, send_file
 from flask_cors import CORS
 
@@ -66,6 +67,13 @@ def semantic_search():
         result = call_databricks_api(query, num_results)
         return jsonify(result)
         
+    except (ReadTimeout, ConnectTimeout, Timeout) as e:
+        print(f"Semantic search timeout error: {e}")
+        return jsonify({
+            'error': 'ENDPOINT_STARTING',
+            'message': 'The search endpoint is currently starting up. This usually takes about 30 seconds. Please try again in a moment.',
+            'retry_suggested': True
+        }), 503
     except Exception as e:
         print(f"Semantic search error: {e}")
         return jsonify({'error': f"Semantic search failed: {str(e)}"}), 500
@@ -88,6 +96,13 @@ def rag_chat():
         result = call_rag_api(query, num_results, conversation_id)
         return jsonify(result)
         
+    except (ReadTimeout, ConnectTimeout, Timeout) as e:
+        print(f"RAG chat timeout error: {e}")
+        return jsonify({
+            'error': 'ENDPOINT_STARTING',
+            'message': 'The AI endpoint is currently starting up. This usually takes about 30 seconds. Please try again in a moment.',
+            'retry_suggested': True
+        }), 503
     except Exception as e:
         print(f"RAG chat error: {e}")
         return jsonify({'error': f"RAG chat failed: {str(e)}"}), 500
@@ -96,10 +111,45 @@ def rag_chat():
 def health_check():
     """Health check endpoint for Cloud Run"""
     return jsonify({
-        'status': 'healthy', 
+        'status': 'healthy',
         'service': 'pdf-document-explorer',
         'version': '1.0.0'
     })
+
+@app.route('/ping-endpoints', methods=['POST'])
+def ping_endpoints():
+    """Ping both Databricks endpoints to warm them up"""
+    results = {}
+
+    # Ping semantic search endpoint
+    try:
+        semantic_result = ping_semantic_endpoint()
+        results['semantic_search'] = {
+            'status': 'success' if semantic_result else 'failed',
+            'endpoint': DATABRICKS_URL
+        }
+    except Exception as e:
+        results['semantic_search'] = {
+            'status': 'failed',
+            'endpoint': DATABRICKS_URL,
+            'error': str(e)
+        }
+
+    # Ping RAG endpoint
+    try:
+        rag_result = ping_rag_endpoint()
+        results['rag_chat'] = {
+            'status': 'success' if rag_result else 'failed',
+            'endpoint': RAG_URL
+        }
+    except Exception as e:
+        results['rag_chat'] = {
+            'status': 'failed',
+            'endpoint': RAG_URL,
+            'error': str(e)
+        }
+
+    return jsonify(results)
 
 def call_databricks_api(query, num_results=20):
     """Call the Databricks Vector Search API"""
@@ -115,12 +165,16 @@ def call_databricks_api(query, num_results=20):
         'Content-Type': 'application/json'
     }
     
-    response = requests.post(
-        DATABRICKS_URL,
-        headers=headers,
-        json=request_data,
-        timeout=30
-    )
+    try:
+        response = requests.post(
+            DATABRICKS_URL,
+            headers=headers,
+            json=request_data,
+            timeout=30
+        )
+    except (ReadTimeout, ConnectTimeout, Timeout) as e:
+        # Re-raise timeout exceptions to be caught by the route handler
+        raise e
     
     if not response.ok:
         error_msg = f"Databricks API error: {response.status_code} - {response.text}"
@@ -155,12 +209,16 @@ def call_rag_api(query, num_results=[10], conversation_id=['session_001']):
         'Content-Type': 'application/json'
     }
     
-    response = requests.post(
-        RAG_URL,
-        headers=headers,
-        json=request_data,
-        timeout=30
-    )
+    try:
+        response = requests.post(
+            RAG_URL,
+            headers=headers,
+            json=request_data,
+            timeout=30
+        )
+    except (ReadTimeout, ConnectTimeout, Timeout) as e:
+        # Re-raise timeout exceptions to be caught by the route handler
+        raise e
     
     if not response.ok:
         error_msg = f"Databricks RAG API error: {response.status_code} - {response.text}"
@@ -170,6 +228,72 @@ def call_rag_api(query, num_results=[10], conversation_id=['session_001']):
     result = response.json()
     print(f"Databricks RAG API responded successfully")
     return result
+
+def ping_semantic_endpoint():
+    """Send a simple ping request to the semantic search endpoint"""
+    try:
+        print("Pinging semantic search endpoint to warm it up...")
+
+        # Use a simple test query to ping the endpoint
+        request_data = {
+            "dataframe_split": {
+                "columns": ["query", "num_results"],
+                "data": [["ping", 1]]
+            }
+        }
+
+        headers = {
+            'Authorization': f'Bearer {DATABRICKS_TOKEN}',
+            'Content-Type': 'application/json'
+        }
+
+        response = requests.post(
+            DATABRICKS_URL,
+            headers=headers,
+            json=request_data,
+            timeout=60  # Longer timeout for warming up
+        )
+
+        success = response.ok
+        print(f"Semantic search endpoint ping: {'SUCCESS' if success else 'FAILED'}")
+        return success
+
+    except Exception as e:
+        print(f"Error pinging semantic search endpoint: {e}")
+        return False
+
+def ping_rag_endpoint():
+    """Send a simple ping request to the RAG endpoint"""
+    try:
+        print("Pinging RAG endpoint to warm it up...")
+
+        # Use a simple test query to ping the endpoint
+        request_data = {
+            "dataframe_split": {
+                "columns": ["query", "num_results", "conversation_id"],
+                "data": [["ping", 1, "ping_session"]]
+            }
+        }
+
+        headers = {
+            'Authorization': f'Bearer {DATABRICKS_TOKEN}',
+            'Content-Type': 'application/json'
+        }
+
+        response = requests.post(
+            RAG_URL,
+            headers=headers,
+            json=request_data,
+            timeout=60  # Longer timeout for warming up
+        )
+
+        success = response.ok
+        print(f"RAG endpoint ping: {'SUCCESS' if success else 'FAILED'}")
+        return success
+
+    except Exception as e:
+        print(f"Error pinging RAG endpoint: {e}")
+        return False
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))

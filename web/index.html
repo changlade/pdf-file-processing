@@ -1148,27 +1148,47 @@
             
             .left-panel {
                 width: 100%;
-                max-height: 50vh;
+                max-height: none;
+                height: 100vh;
+            }
+            
+            /* Hide PDF viewer on mobile - only show chatbot */
+            .right-panel {
+                display: none !important;
             }
             
             .resizer {
-                height: 4px;
-                width: 100%;
-                cursor: row-resize;
-            }
-            
-            .resizer::after {
-                width: 20px;
-                height: 2px;
+                display: none !important;
             }
 
             .chat-messages {
-                min-height: 300px;
-                max-height: 400px;
+                min-height: 60vh;
+                max-height: 70vh;
             }
 
             .message-content {
-                max-width: 90%;
+                max-width: 95%;
+            }
+            
+            /* Ensure chat section is visible by default on mobile */
+            #chatSection {
+                display: block !important;
+            }
+            
+            /* Auto-activate chat mode on mobile */
+            #chatModeBtn {
+                background: var(--primary-color) !important;
+                color: white !important;
+            }
+            
+            #carModeBtn, #semanticModeBtn {
+                background: var(--secondary-bg) !important;
+                color: var(--text-color) !important;
+            }
+            
+            /* Hide other search sections on mobile */
+            #carSearchSection, #semanticSearchSection {
+                display: none !important;
             }
         }
     </style>
@@ -1361,12 +1381,29 @@
 
         // PDF.js will be configured when loading the PDF
 
+        // Function to detect mobile devices
+        function isMobileDevice() {
+            return window.innerWidth <= 768;
+        }
+
         // Load data when page loads
         document.addEventListener('DOMContentLoaded', function() {
             loadData();
             setupEventListeners();
             setupResizer();
             setupPDFControls();
+            
+            // Auto-switch to chat mode on mobile devices
+            if (isMobileDevice()) {
+                switchSearchMode('chat');
+            }
+        });
+
+        // Handle window resize for mobile/desktop switching
+        window.addEventListener('resize', function() {
+            if (isMobileDevice() && currentSearchMode !== 'chat') {
+                switchSearchMode('chat');
+            }
         });
 
         function setupEventListeners() {

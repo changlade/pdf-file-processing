@@ -1,0 +1,67 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Archive and build artifacts
+archive/
+builds/
+current_specs/
+*.spec
+
+# Documentation
+*.md
+HOW-TO-OPEN-MAC.md
+MACOS-SECURITY-GUIDE.md
+EXECUTABLES-README.md
+REAL_TOKEN_INSTRUCTIONS.md
+BUILD_CONFIGURATION.md
+CONFIGURATION.md
+
+# Config files
+config.example.env
+
+# Legacy files
+pdf_explorer_mac_v2.py
+pdf_explorer_windows_v2.py
+flask_proxy.py
+
+# Source directory (we're using the root-level files)
+src/

@@ -1441,53 +1441,6 @@
             return window.innerWidth <= 768;
         }
 
-        // Ping Databricks endpoints to wake them up
-        async function pingDatabricksEndpoints() {
-            console.log('🔄 Pinging Databricks endpoints to wake them up...');
-            
-            const pingPromises = [];
-            
-            // Ping semantic search endpoint
-            const semanticPing = fetch(`${window.location.protocol}//${window.location.host}/semantic-search`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    query: 'ping',
-                    get_all: false
-                })
-            }).then(response => {
-                console.log('✅ Semantic search endpoint pinged successfully');
-                return response;
-            }).catch(error => {
-                console.log('⚠️ Semantic search endpoint ping failed (expected during startup):', error.message);
-            });
-            
-            // Ping RAG chat endpoint
-            const ragPing = fetch(`${window.location.protocol}//${window.location.host}/rag-chat`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    query: ['ping'],
-                    num_results: [1],
-                    conversation_id: ['ping']
-                })
-            }).then(response => {
-                console.log('✅ RAG chat endpoint pinged successfully');
-                return response;
-            }).catch(error => {
-                console.log('⚠️ RAG chat endpoint ping failed (expected during startup):', error.message);
-            });
-            
-            pingPromises.push(semanticPing, ragPing);
-            
-            // Wait for all pings to complete (or fail)
-            await Promise.allSettled(pingPromises);
-            console.log('🚀 Databricks endpoint wake-up process completed');
-        }
 
         // Load data when page loads
         document.addEventListener('DOMContentLoaded', function() {
@@ -1500,9 +1453,6 @@
             if (isMobileDevice()) {
                 switchSearchMode('chat');
             }
-            
-            // Ping Databricks endpoints to wake them up
-            pingDatabricksEndpoints();
         });
 
         // Handle window resize for mobile/desktop switching

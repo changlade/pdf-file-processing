@@ -10,23 +10,62 @@
     
     <style>
         :root {
-            --primary-bg: #ffffff;
-            --secondary-bg: #f8fafc;
-            --tertiary-bg: #f1f5f9;
-            --border-light: #e2e8f0;
-            --border-medium: #cbd5e1;
-            --text-primary: #1e293b;
-            --text-secondary: #475569;
-            --text-muted: #64748b;
-            --accent-blue: #0f172a;
-            --accent-blue-light: #334155;
-            --accent-orange: #ea580c;
-            --accent-orange-light: #fb923c;
-            --success: #059669;
-            --warning: #d97706;
-            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            /* Claude Brand Colors from Mobbin */
+            --claude-crail: #C15F3C;         /* Primary warm terracotta */
+            --claude-cloudy: #B1ADA1;        /* Neutral gray-beige */
+            --claude-pampas: #F4F3EE;        /* Warm off-white */
+            --claude-white: #FFFFFF;         /* Pure white */
+            
+            /* Extended palette with Claude-inspired variants */
+            --primary-bg: #F4F3EE;           /* Pampas - main background */
+            --secondary-bg: #F9F8F5;         /* Very light warm gray */
+            --tertiary-bg: #F0EFEB;          /* Slightly darker warm gray */
+            --quaternary-bg: #FFFFFF;        /* Pure white for cards */
+            
+            /* Border colors - warm neutrals */
+            --border-light: #E8E6E0;         /* Light warm gray border */
+            --border-medium: #D4D1C7;        /* Medium warm gray border */
+            --border-dark: #B1ADA1;          /* Cloudy for darker borders */
+            
+            /* Text colors - high contrast for readability */
+            --text-primary: #2C2B28;         /* Very dark warm gray for primary text */
+            --text-secondary: #4A4843;       /* Dark warm gray for secondary text */
+            --text-muted: #6B675F;           /* Medium warm gray for muted text */
+            --text-light: #8A857C;           /* Light warm gray for subtle text */
+            
+            /* Accent colors from Claude palette */
+            --accent-primary: #C15F3C;       /* Crail - primary accent */
+            --accent-primary-light: #D47A5A; /* Lighter terracotta for hover */
+            --accent-primary-bg: #FDF4F0;    /* Very light terracotta background */
+            --accent-secondary: #B1ADA1;     /* Cloudy - secondary accent */
+            --accent-secondary-light: #C4C0B8; /* Lighter cloudy for hover */
+            --accent-secondary-bg: #F8F7F5;  /* Very light cloudy background */
+            --accent-warm: #E8A87C;          /* Warm orange complement */
+            --accent-warm-light: #F0C19A;    /* Lighter warm orange */
+            --accent-warm-bg: #FEF9F5;       /* Very light warm background */
+            
+            /* Status colors - using Claude palette variants */
+            --success: #4A7C59;              /* Dark green for success */
+            --success-bg: #F0F4F1;           /* Light green background */
+            --warning: #B8860B;              /* Dark goldenrod for warning */
+            --warning-bg: #FDF8E1;           /* Light goldenrod background */
+            --error: #C15F3C;                /* Crail for errors */
+            --error-bg: #FDF4F0;             /* Light terracotta background */
+            --info: #6B7C93;                 /* Cool blue-gray for info */
+            --info-bg: #F4F6F8;              /* Light blue-gray background */
+            
+            /* Interactive states */
+            --hover-bg: #F9F8F5;             /* Light warm gray on hover */
+            --active-bg: #F0EFEB;            /* Slightly darker warm gray when active */
+            --selected-bg: #FDF4F0;          /* Light terracotta for selected items */
+            
+            /* Shadows - subtle with warm tint */
+            --shadow-sm: 0 1px 2px 0 rgba(193, 95, 60, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(193, 95, 60, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(193, 95, 60, 0.15);
+            --shadow-xl: 0 20px 25px -5px rgba(193, 95, 60, 0.2);
+            
+            /* Border radius */
             --radius-sm: 6px;
             --radius-md: 8px;
             --radius-lg: 12px;
@@ -56,7 +95,7 @@
         .left-panel {
             min-width: 320px;
             width: 60%;
-            background: var(--primary-bg);
+            background: var(--quaternary-bg);
             border-right: 1px solid var(--border-light);
             display: flex;
             flex-direction: column;
@@ -76,7 +115,7 @@
         }
 
         .resizer:hover {
-            background: var(--accent-orange);
+            background: var(--accent-primary);
         }
 
         .resizer::after {
@@ -105,7 +144,7 @@
         }
 
         .panel-header {
-            background: var(--accent-blue);
+            background: var(--accent-primary);
             color: white;
             padding: 20px 24px;
             border-bottom: 1px solid var(--border-light);
@@ -134,7 +173,7 @@
 
         .filter-section {
             padding: 24px;
-            background: var(--primary-bg);
+            background: var(--quaternary-bg);
             border-bottom: 1px solid var(--border-light);
         }
 
@@ -155,8 +194,8 @@
 
         .filter-input:focus {
             outline: none;
-            border-color: var(--accent-orange);
-            box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(193, 95, 60, 0.1);
         }
 
         .filter-input::placeholder {
@@ -203,13 +242,13 @@
         }
 
         .mode-btn.active {
-            background: var(--primary-bg);
-            color: var(--accent-blue);
+            background: var(--quaternary-bg);
+            color: var(--accent-primary);
             box-shadow: var(--shadow-sm);
         }
 
         .mode-btn:hover:not(.active) {
-            background: var(--primary-bg);
+            background: var(--hover-bg);
             color: var(--text-primary);
         }
 
@@ -219,7 +258,7 @@
 
         .semantic-search-btn {
             width: 100%;
-            background: var(--accent-orange);
+            background: var(--accent-primary);
             color: white;
             border: none;
             padding: 12px 16px;
@@ -232,7 +271,7 @@
         }
 
         .semantic-search-btn:hover {
-            background: var(--accent-orange-light);
+            background: var(--accent-primary-light);
         }
 
         .semantic-search-btn:disabled {
@@ -312,10 +351,10 @@
 
         .toggle-input-inline:checked + .toggle-slider-inline,
         .inline-toggle .toggle-input-inline:checked + .toggle-slider-inline {
-            background: #005EB8 !important;
-            background-color: #005EB8 !important;
-            border-color: #005EB8 !important;
-            box-shadow: inset 0 1px 3px rgba(0, 94, 184, 0.2) !important;
+            background: var(--accent-primary) !important;
+            background-color: var(--accent-primary) !important;
+            border-color: var(--accent-primary) !important;
+            box-shadow: inset 0 1px 3px rgba(193, 95, 60, 0.2) !important;
         }
 
         .toggle-input-inline:checked + .toggle-slider-inline:before {
@@ -329,8 +368,8 @@
 
         .toggle-input-inline:checked + .toggle-slider-inline:hover,
         .inline-toggle .toggle-input-inline:checked + .toggle-slider-inline:hover {
-            background: #0083d1 !important;
-            background-color: #0083d1 !important;
+            background: var(--accent-primary-light) !important;
+            background-color: var(--accent-primary-light) !important;
         }
 
         /* Visual indicator when toggle is active - subtle input field highlight */
@@ -342,7 +381,7 @@
         .section-filter {
             margin-top: 16px;
             padding: 12px;
-            background: var(--secondary-bg);
+            background: var(--accent-primary-bg);
             border: 1px solid var(--border-light);
             border-radius: var(--radius-md);
         }
@@ -372,11 +411,11 @@
 
         .filter-tag {
             padding: 6px 12px;
-            background: #FFFFFF;
-            border: 2px solid #E5E7EB;
+            background: var(--quaternary-bg);
+            border: 2px solid var(--border-medium);
             border-radius: var(--radius-sm);
             font-size: 12px;
-            color: #4B5563;
+            color: var(--text-secondary);
             cursor: pointer;
             transition: all 0.2s ease;
             white-space: nowrap;
@@ -385,27 +424,27 @@
         }
 
         .filter-tag:hover {
-            border-color: #005EB8;
-            color: #005EB8;
-            background: #F8FAFC;
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+            background: var(--hover-bg);
             transform: translateY(-1px);
-            box-shadow: 0 2px 4px rgba(0, 94, 184, 0.1);
+            box-shadow: 0 2px 4px rgba(193, 95, 60, 0.1);
         }
 
         .filter-tag.active {
-            background: #005EB8 !important;
-            border-color: #005EB8 !important;
+            background: var(--accent-primary) !important;
+            border-color: var(--accent-primary) !important;
             color: #FFFFFF !important;
             font-weight: 600;
-            box-shadow: 0 3px 8px rgba(0, 94, 184, 0.4);
+            box-shadow: 0 3px 8px rgba(193, 95, 60, 0.4);
             transform: translateY(-1px);
         }
 
         .filter-tag.active:hover {
-            background: #00ACED !important;
-            border-color: #00ACED !important;
+            background: var(--accent-primary-light) !important;
+            border-color: var(--accent-primary-light) !important;
             color: #FFFFFF !important;
-            box-shadow: 0 4px 12px rgba(0, 172, 237, 0.5);
+            box-shadow: 0 4px 12px rgba(212, 122, 90, 0.5);
         }
 
         .reference-count {
@@ -420,7 +459,7 @@
             overflow-y: auto;
             border: 1px solid var(--border-light);
             border-radius: var(--radius-md);
-            background: var(--primary-bg);
+            background: var(--quaternary-bg);
             padding: 16px;
         }
 
@@ -428,7 +467,7 @@
             display: inline-flex;
             justify-content: space-between;
             align-items: center;
-            background: var(--accent-blue-light);
+            background: var(--accent-secondary);
             color: white;
             padding: 6px 12px;
             margin: 2px;
@@ -456,12 +495,12 @@
         }
 
         .reference-tag:hover {
-            background: var(--accent-blue);
+            background: var(--accent-secondary-light);
             transform: translateY(-1px);
         }
 
         .reference-tag.selected {
-            background: var(--accent-orange);
+            background: var(--accent-primary);
             box-shadow: var(--shadow-sm);
         }
 
@@ -469,7 +508,7 @@
             flex: 1;
             overflow-y: auto;
             padding: 24px;
-            background: var(--secondary-bg);
+            background: var(--primary-bg);
         }
 
         /* Hide text-blocks when chat is active */
@@ -499,7 +538,7 @@
         }
 
         .text-block {
-            background: var(--primary-bg);
+            background: var(--quaternary-bg);
             border: 1px solid var(--border-light);
             border-radius: var(--radius-md);
             padding: 20px;
@@ -510,14 +549,14 @@
         }
 
         .text-block:hover {
-            border-color: var(--accent-orange-light);
+            border-color: var(--accent-primary);
             box-shadow: var(--shadow-md);
             transform: translateY(-1px);
         }
 
         .text-block.highlighted {
-            border-color: var(--accent-orange);
-            background: linear-gradient(to right, #fef3c7, var(--primary-bg));
+            border-color: var(--accent-primary);
+            background: linear-gradient(to right, var(--accent-primary-bg), var(--quaternary-bg));
             box-shadow: var(--shadow-lg);
         }
 
@@ -532,7 +571,7 @@
         }
 
         .page-number {
-            background: var(--text-muted);
+            background: var(--accent-primary);
             color: white;
             padding: 4px 10px;
             border-radius: var(--radius-sm);
@@ -553,7 +592,7 @@
         }
 
         .block-ref-tag {
-            background: var(--success);
+            background: var(--accent-warm);
             color: white;
             padding: 3px 8px;
             border-radius: var(--radius-sm);
@@ -618,7 +657,7 @@
         }
 
         .pdf-toolbar button {
-            background: var(--accent-blue-light);
+            background: var(--accent-secondary);
             color: white;
             border: none;
             padding: 8px 16px;
@@ -630,7 +669,7 @@
         }
 
         .pdf-toolbar button:hover {
-            background: var(--accent-blue);
+            background: var(--accent-secondary-light);
         }
 
         .pdf-toolbar button:disabled {
@@ -740,11 +779,11 @@
         }
 
         .textLayer ::selection {
-            background: rgba(0, 0, 255, 0.3); /* Blue highlight */
+            background: rgba(193, 95, 60, 0.3); /* Terracotta highlight */
         }
 
         .textLayer ::-moz-selection {
-            background: rgba(0, 0, 255, 0.3);
+            background: rgba(193, 95, 60, 0.3);
         }
 
         /* Also target our custom text-layer class for compatibility */
@@ -926,13 +965,13 @@
         .bot-message .message-content {
             background: var(--primary-bg);
             border: 1px solid var(--border-light);
-            border-left: 4px solid #005EB8;
+            border-left: 4px solid var(--accent-secondary);
         }
 
         .user-message .message-content {
-            background: #005EB8;
+            background: #e8a87c;
             color: white;
-            border-left: 4px solid #00ACED;
+            border-left: 4px solid #d47a5a;
         }
 
         /* Formatting styles for bot messages */
@@ -948,7 +987,7 @@
 
         .bot-message .message-content strong {
             font-weight: 600;
-            color: #005EB8;
+            color: #4A4843;
         }
 
         .bot-message .message-content em {
@@ -975,7 +1014,7 @@
 
         .source-item {
             font-size: 12px;
-            color: #005EB8;
+            color: var(--accent-primary);
             margin-bottom: 4px;
             cursor: pointer;
             padding: 4px 8px;
@@ -986,7 +1025,7 @@
         }
 
         .source-item:hover {
-            background: #005EB8;
+            background: var(--accent-primary);
             color: white;
             transform: translateX(4px);
             text-decoration-color: white;
@@ -1018,9 +1057,9 @@
         }
 
         .sources-toggle-btn:hover {
-            background: #005EB8;
+            background: var(--accent-primary);
             color: white;
-            border-color: #005EB8;
+            border-color: var(--accent-primary);
         }
 
         .sources-container {
@@ -1031,7 +1070,7 @@
 
         /* Clickable source references within answer text */
         .clickable-source {
-            color: #005EB8;
+            color: var(--accent-primary);
             cursor: pointer;
             text-decoration: underline;
             text-decoration-color: transparent;
@@ -1041,7 +1080,7 @@
         }
 
         .clickable-source:hover {
-            background: #005EB8;
+            background: var(--accent-primary);
             color: white;
             text-decoration-color: white;
         }
@@ -1070,12 +1109,12 @@
 
         .chat-input:focus {
             outline: none;
-            border-color: #005EB8;
-            box-shadow: 0 0 0 3px rgba(0, 94, 184, 0.1);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(193, 95, 60, 0.1);
         }
 
         .send-chat-btn {
-            background: #005EB8;
+            background: var(--accent-primary);
             color: white;
             border: none;
             border-radius: var(--radius-md);
@@ -1090,7 +1129,7 @@
         }
 
         .send-chat-btn:hover {
-            background: #00ACED;
+            background: var(--accent-primary-light);
         }
 
         .send-chat-btn:disabled {
@@ -1123,9 +1162,9 @@
         }
 
         .clear-chat-btn:hover {
-            background: #EF3340;
+            background: var(--error);
             color: white;
-            border-color: #EF3340;
+            border-color: var(--error);
         }
 
 
@@ -1136,7 +1175,7 @@
             padding: 12px 16px;
             background: var(--tertiary-bg);
             border-radius: var(--radius-md);
-            border-left: 4px solid #005EB8;
+            border-left: 4px solid var(--accent-secondary);
             margin-bottom: 16px;
             font-style: italic;
             color: var(--text-secondary);
@@ -1150,7 +1189,7 @@
         .typing-dot {
             width: 6px;
             height: 6px;
-            background: #005EB8;
+            background: var(--accent-secondary);
             border-radius: 50%;
             animation: typing 1.4s infinite;
         }
@@ -1176,9 +1215,9 @@
 
         /* Error message styles */
         .error-message {
-            background: #FFB2BE !important;
-            color: #EF3340 !important;
-            border-left: 4px solid #EF3340 !important;
+            background: var(--error-bg) !important;
+            color: var(--error) !important;
+            border-left: 4px solid var(--error) !important;
         }
 
         /* Sample questions styles */
@@ -1187,7 +1226,7 @@
             padding: 16px;
             background: var(--tertiary-bg);
             border-radius: var(--radius-md);
-            border-left: 4px solid #005EB8;
+            border-left: 4px solid var(--accent-secondary);
         }
 
         .sample-questions-title {
@@ -1216,9 +1255,9 @@
         }
 
         .sample-question-item:hover {
-            background: #005EB8;
+            background: var(--accent-secondary);
             color: white;
-            border-color: #005EB8;
+            border-color: var(--accent-secondary);
             transform: translateX(4px);
         }
 
@@ -1694,7 +1733,7 @@
             
             textBlocksContainer.innerHTML = `
                 <div class="no-results">
-                    <h3 style="margin-bottom: 12px; color: var(--accent-blue);">🧠 Semantic Search</h3>
+                    <h3 style="margin-bottom: 12px; color: var(--accent-primary);">🧠 Semantic Search</h3>
                     <p style="margin-bottom: 16px;">Search for concepts, topics, and meaning rather than exact text matches.</p>
                     <p style="font-size: 13px; color: var(--text-muted);">
                         Try queries like: "violence against Muslims", "war crimes evidence", "witness testimony about killings"
@@ -1984,7 +2023,7 @@
             if (result.relevance_score) {
                 const scoreTag = document.createElement('span');
                 scoreTag.className = 'block-ref-tag';
-                scoreTag.style.background = '#54AD18'; // Danone green
+                scoreTag.style.background = '#7BC47F'; // More visible green for confidence
                 scoreTag.style.fontWeight = '600';
                 scoreTag.textContent = calculateConfidenceLevel(result.relevance_score);
                 metadata.appendChild(scoreTag);
@@ -1993,7 +2032,7 @@
             // Add section type
             const sectionTag = document.createElement('span');
             sectionTag.className = 'block-ref-tag';
-            sectionTag.style.background = '#005EB8'; // Danone primary blue
+            sectionTag.style.background = '#8FA3D1'; // More visible blue for sections
             sectionTag.textContent = result.section_type;
             metadata.appendChild(sectionTag);
             

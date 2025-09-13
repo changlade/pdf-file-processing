@@ -938,22 +938,73 @@
 
         .source-item {
             font-size: 12px;
-            color: var(--text-muted);
+            color: #005EB8;
             margin-bottom: 4px;
             cursor: pointer;
             padding: 4px 8px;
             border-radius: var(--radius-sm);
             transition: all 0.15s ease;
+            text-decoration: underline;
+            text-decoration-color: transparent;
         }
 
         .source-item:hover {
             background: #005EB8;
             color: white;
             transform: translateX(4px);
+            text-decoration-color: white;
         }
 
         .source-item:last-child {
             margin-bottom: 0;
+        }
+
+        .sources-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .sources-toggle-btn {
+            background: transparent;
+            border: 1px solid var(--border-medium);
+            color: var(--text-secondary);
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+            font-weight: 500;
+        }
+
+        .sources-toggle-btn:hover {
+            background: #005EB8;
+            color: white;
+            border-color: #005EB8;
+        }
+
+        .sources-container {
+            /* Container for source items */
+        }
+
+        /* Clickable source references within answer text */
+        .clickable-source {
+            color: #005EB8;
+            cursor: pointer;
+            text-decoration: underline;
+            text-decoration-color: transparent;
+            transition: all 0.15s ease;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        .clickable-source:hover {
+            background: #005EB8;
+            color: white;
+            text-decoration-color: white;
         }
 
 
@@ -1038,10 +1089,6 @@
             border-color: #EF3340;
         }
 
-        .conversation-info {
-            font-size: 11px;
-            color: var(--text-muted);
-        }
 
         .typing-indicator {
             display: flex;
@@ -1160,6 +1207,16 @@
             .resizer {
                 display: none !important;
             }
+            
+            /* Hide navigation mode buttons on mobile - only show chat */
+            .search-mode-toggle {
+                display: none !important;
+            }
+            
+            /* Hide other search sections on mobile */
+            #carSearchSection, #semanticSearchSection {
+                display: none !important;
+            }
 
             .chat-messages {
                 min-height: 60vh;
@@ -1174,6 +1231,7 @@
             #chatSection {
                 display: block !important;
             }
+            
             
             /* Auto-activate chat mode on mobile */
             #chatModeBtn {
@@ -1293,9 +1351,6 @@
                             </div>
                             <div class="chat-controls">
                                 <button id="clearChatBtn" class="clear-chat-btn">Clear Conversation</button>
-                                <div class="conversation-info">
-                                    <span id="conversationId">Session: new</span>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -1386,6 +1441,54 @@
             return window.innerWidth <= 768;
         }
 
+        // Ping Databricks endpoints to wake them up
+        async function pingDatabricksEndpoints() {
+            console.log('🔄 Pinging Databricks endpoints to wake them up...');
+            
+            const pingPromises = [];
+            
+            // Ping semantic search endpoint
+            const semanticPing = fetch(`${window.location.protocol}//${window.location.host}/semantic-search`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    query: 'ping',
+                    get_all: false
+                })
+            }).then(response => {
+                console.log('✅ Semantic search endpoint pinged successfully');
+                return response;
+            }).catch(error => {
+                console.log('⚠️ Semantic search endpoint ping failed (expected during startup):', error.message);
+            });
+            
+            // Ping RAG chat endpoint
+            const ragPing = fetch(`${window.location.protocol}//${window.location.host}/rag-chat`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    query: ['ping'],
+                    num_results: [1],
+                    conversation_id: ['ping']
+                })
+            }).then(response => {
+                console.log('✅ RAG chat endpoint pinged successfully');
+                return response;
+            }).catch(error => {
+                console.log('⚠️ RAG chat endpoint ping failed (expected during startup):', error.message);
+            });
+            
+            pingPromises.push(semanticPing, ragPing);
+            
+            // Wait for all pings to complete (or fail)
+            await Promise.allSettled(pingPromises);
+            console.log('🚀 Databricks endpoint wake-up process completed');
+        }
+
         // Load data when page loads
         document.addEventListener('DOMContentLoaded', function() {
             loadData();
@@ -1397,6 +1500,9 @@
             if (isMobileDevice()) {
                 switchSearchMode('chat');
             }
+            
+            // Ping Databricks endpoints to wake them up
+            pingDatabricksEndpoints();
         });
 
         // Handle window resize for mobile/desktop switching
@@ -1673,7 +1779,7 @@
 
         async function callDatabricksAPI(query) {
             // Use local proxy server to avoid CORS issues
-            const url = 'http://127.0.0.1:8002/semantic-search';
+            const url = `${window.location.protocol}//${window.location.host}/semantic-search`;
             
             // Check if "Get all references" toggle is enabled
             const getAllToggle = document.getElementById('getAllToggle');
@@ -1846,7 +1952,7 @@
                 scoreTag.className = 'block-ref-tag';
                 scoreTag.style.background = '#54AD18'; // Danone green
                 scoreTag.style.fontWeight = '600';
-                scoreTag.textContent = `${(result.relevance_score * 100).toFixed(1)}% relevance`;
+                scoreTag.textContent = calculateConfidenceLevel(result.relevance_score);
                 metadata.appendChild(scoreTag);
             }
             
@@ -2396,7 +2502,7 @@
             navigateToPDFPage(block.page_number, block);
         }
 
-        async function navigateToPDFPage(pageNumber, blockData) {
+        async function navigateToPDFPage(pageNumber, blockData = null) {
             if (pageNumber !== currentPage) {
                 currentPage = pageNumber;
                 await renderPage(currentPage);
@@ -2405,7 +2511,7 @@
             
             // No highlighting - just navigate to the page
             console.log(`Navigated to page ${pageNumber} for block with references:`, 
-                        blockData.references ? blockData.references.filter(ref => ref.startsWith('CAR-')) : []);
+                        blockData && blockData.references ? blockData.references.filter(ref => ref.startsWith('CAR-')) : []);
         }
 
         // Highlighting functions removed - PDF is now selectable but without highlights
@@ -2480,9 +2586,6 @@
             // Add chat-active class to left panel for CSS targeting
             leftPanel.classList.add('chat-active');
             
-            // Update conversation ID display
-            document.getElementById('conversationId').textContent = `Session: ${conversationId}`;
-            
             // Add sample questions to chat if it's empty (only welcome message)
             addSampleQuestions();
         }
@@ -2553,7 +2656,7 @@
 
         async function callRAGEndpoint(query) {
             // Use the local proxy to avoid CORS issues
-            const proxyUrl = 'http://127.0.0.1:8002/rag-chat';
+            const proxyUrl = `${window.location.protocol}//${window.location.host}/rag-chat`;
             
             const requestData = {
                 query: [query],
@@ -2626,6 +2729,63 @@
             return window.DATABRICKS_TOKEN || 'your-databricks-token-here';
         }
 
+        function calculateConfidenceLevel(score) {
+            // Multiply by 10000 to get the correct relevance score
+            const correctedScore = score * 10000;
+            
+            if (correctedScore > 60) {
+                return 'Very high confidence';
+            } else if (correctedScore >= 40) {
+                return 'High confidence';
+            } else {
+                return 'Low confidence';
+            }
+        }
+
+        function makeSourceReferencesClickable(content, sources) {
+            // Create a map of source information for quick lookup
+            const sourceMap = new Map();
+            sources.forEach((source, index) => {
+                if (source.pages) {
+                    const pageMatch = source.pages.match(/(\d+)/);
+                    if (pageMatch) {
+                        const pageNumber = parseInt(pageMatch[1]);
+                        const sectionText = source.section || 'Document';
+                        sourceMap.set(sectionText.toLowerCase(), pageNumber);
+                        sourceMap.set(`page ${source.pages}`, pageNumber);
+                        sourceMap.set(`pages ${source.pages}`, pageNumber);
+                    }
+                }
+            });
+            
+            // Pattern to match source references in text
+            // Look for patterns like "According to [Source Name]" or "page 1234" or "pages 1234-1235"
+            let processedContent = content;
+            
+            // Match page references like "page 1234" or "pages 1234-1235"
+            processedContent = processedContent.replace(/\b(pages?\s+\d+(?:-\d+)?)\b/gi, (match) => {
+                const pageMatch = match.match(/(\d+)/);
+                if (pageMatch) {
+                    const pageNumber = parseInt(pageMatch[1]);
+                    return `<span class="clickable-source" data-page="${pageNumber}" title="Click to navigate to ${match}">${match}</span>`;
+                }
+                return match;
+            });
+            
+            // Match section references that exist in our sources
+            sourceMap.forEach((pageNumber, sectionKey) => {
+                if (sectionKey.includes('page')) return; // Skip page entries, already handled above
+                
+                // Create regex for section names (case insensitive)
+                const sectionRegex = new RegExp(`\\b(${sectionKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})\\b`, 'gi');
+                processedContent = processedContent.replace(sectionRegex, (match) => {
+                    return `<span class="clickable-source" data-page="${pageNumber}" title="Click to navigate to ${match}">${match}</span>`;
+                });
+            });
+            
+            return processedContent;
+        }
+
         function addMessageToChat(sender, content, sources = null, isError = false) {
             const chatMessages = document.getElementById('chatMessages');
             
@@ -2662,17 +2822,54 @@
                     return '<ul>' + cleanedMatch + '</ul>';
                 });
                 
+                // Make source references in text clickable
+                if (sources && sources.length > 0) {
+                    formattedContent = makeSourceReferencesClickable(formattedContent, sources);
+                }
+                
                 messageContent.innerHTML = formattedContent;
+                
+                // Add click event listeners to clickable sources in the text
+                const clickableSources = messageContent.querySelectorAll('.clickable-source');
+                clickableSources.forEach(sourceElement => {
+                    sourceElement.addEventListener('click', () => {
+                        const pageNumber = parseInt(sourceElement.getAttribute('data-page'));
+                        if (pageNumber) {
+                            console.log(`🔗 Navigating to page ${pageNumber} from inline source: ${sourceElement.textContent}`);
+                            navigateToPDFPage(pageNumber);
+                        }
+                    });
+                });
                 
                 // Add sources if available
                 if (sources && sources.length > 0) {
                     const sourcesDiv = document.createElement('div');
                     sourcesDiv.className = 'message-sources';
                     
+                    const sourcesHeader = document.createElement('div');
+                    sourcesHeader.className = 'sources-header';
+                    
                     const sourcesTitle = document.createElement('div');
                     sourcesTitle.className = 'source-title';
-                    sourcesTitle.textContent = 'Sources:';
-                    sourcesDiv.appendChild(sourcesTitle);
+                    sourcesTitle.textContent = `Sources (${sources.length}):`;
+                    sourcesHeader.appendChild(sourcesTitle);
+                    
+                    // Add collapse/expand button for large source lists
+                    const maxVisibleSources = 3;
+                    const hasManySources = sources.length > maxVisibleSources;
+                    
+                    if (hasManySources) {
+                        const toggleBtn = document.createElement('button');
+                        toggleBtn.className = 'sources-toggle-btn';
+                        toggleBtn.textContent = 'Show all';
+                        toggleBtn.type = 'button';
+                        sourcesHeader.appendChild(toggleBtn);
+                    }
+                    
+                    sourcesDiv.appendChild(sourcesHeader);
+                    
+                    const sourcesContainer = document.createElement('div');
+                    sourcesContainer.className = 'sources-container';
                     
                     sources.forEach((source, index) => {
                         const sourceItem = document.createElement('div');
@@ -2681,9 +2878,16 @@
                         // Format the source display
                         const sectionText = source.section || 'Document';
                         const pagesText = source.pages || 'Unknown';
-                        const relevanceText = source.relevance ? `${(source.relevance * 100).toFixed(1)}%` : 'N/A';
+                        const confidenceText = source.relevance ? calculateConfidenceLevel(source.relevance) : 
+                                             source.similarity_score ? calculateConfidenceLevel(source.similarity_score) : 'N/A';
                         
-                        sourceItem.innerHTML = `📄 ${sectionText} - Pages ${pagesText} (${relevanceText} relevance)`;
+                        sourceItem.innerHTML = `🔗 ${sectionText} - Pages ${pagesText} (${confidenceText})`;
+                        
+                        // Hide sources beyond the limit initially
+                        if (hasManySources && index >= maxVisibleSources) {
+                            sourceItem.style.display = 'none';
+                            sourceItem.classList.add('hidden-source');
+                        }
                         
                         // Make source clickable to navigate to page
                         if (source.pages) {
@@ -2699,9 +2903,32 @@
                             });
                         }
                         
-                        sourcesDiv.appendChild(sourceItem);
+                        sourcesContainer.appendChild(sourceItem);
                     });
                     
+                    // Add toggle functionality for large source lists
+                    if (hasManySources) {
+                        const toggleBtn = sourcesHeader.querySelector('.sources-toggle-btn');
+                        let isExpanded = false;
+                        
+                        toggleBtn.addEventListener('click', () => {
+                            const hiddenSources = sourcesContainer.querySelectorAll('.hidden-source');
+                            
+                            if (isExpanded) {
+                                // Collapse
+                                hiddenSources.forEach(item => item.style.display = 'none');
+                                toggleBtn.textContent = 'Show all';
+                                isExpanded = false;
+                            } else {
+                                // Expand
+                                hiddenSources.forEach(item => item.style.display = 'block');
+                                toggleBtn.textContent = 'Show less';
+                                isExpanded = true;
+                            }
+                        });
+                    }
+                    
+                    sourcesDiv.appendChild(sourcesContainer);
                     messageContent.appendChild(sourcesDiv);
                 }
             }
@@ -2760,9 +2987,6 @@
                 
                 // Add sample questions
                 addSampleQuestions();
-                
-                // Update session ID
-                document.getElementById('conversationId').textContent = `Session: ${conversationId}`;
             }
         }
 

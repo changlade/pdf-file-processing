@@ -1,6 +1,4 @@
-# Build artifacts
-build/
-dist/
+# Python
 *.pyc
 __pycache__/
 
@@ -18,18 +16,13 @@ venv/
 .DS_Store
 Thumbs.db
 
-# Configuration files with secrets
-config.env
+# Environment variables and secrets
 .env
-token_config.py
-REAL_TOKEN_INSTRUCTIONS.md
-
-# Backup files created during secure builds
-*.backup
+*.env
 
 # Temporary files
 *.tmp
 *.log
 
-# PyInstaller
-*.spec~
+# Docker
+.dockerignore~

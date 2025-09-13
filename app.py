@@ -13,10 +13,16 @@ from flask_cors import CORS
 app = Flask(__name__, static_folder='web', static_url_path='')
 CORS(app)
 
-# Databricks configuration
-DATABRICKS_URL = 'https://dbc-0619d7f5-0bda.cloud.databricks.com/serving-endpoints/icc-intelligence/invocations'
-RAG_URL = 'https://dbc-0619d7f5-0bda.cloud.databricks.com/serving-endpoints/icc-rag-chatbot/invocations'
-DATABRICKS_TOKEN = os.getenv('DATABRICKS_TOKEN', 'your-databricks-token-here')
+# Databricks configuration - using environment variables for security
+DATABRICKS_URL = os.getenv('DATABRICKS_URL', 'https://dbc-0619d7f5-0bda.cloud.databricks.com/serving-endpoints/icc-intelligence/invocations')
+RAG_URL = os.getenv('RAG_URL', 'https://dbc-0619d7f5-0bda.cloud.databricks.com/serving-endpoints/icc-rag-chatbot/invocations')
+DATABRICKS_TOKEN = os.getenv('DATABRICKS_TOKEN')
+
+# Validate required environment variables
+if not DATABRICKS_TOKEN:
+    print("⚠️  WARNING: DATABRICKS_TOKEN environment variable not set!")
+    print("   Semantic search and RAG chat will not work without a valid token.")
+    DATABRICKS_TOKEN = 'missing-token'
 
 @app.route('/')
 def index():

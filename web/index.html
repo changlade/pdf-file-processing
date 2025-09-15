@@ -2427,11 +2427,13 @@
             
             if (!referencesData) return;
             
-            // Filter for CAR references only
+            // Filter for all reference types (CAR, D-, P-)
             const allReferences = Object.keys(referencesData.reference_index);
-            const carReferences = allReferences.filter(ref => ref.startsWith('CAR-'));
+            const allRefs = allReferences.filter(ref => 
+                ref.startsWith('CAR-') || ref.startsWith('D-') || ref.startsWith('P-')
+            );
             
-            const filteredRefs = carReferences.filter(ref => 
+            const filteredRefs = allRefs.filter(ref => 
                 ref.toLowerCase().includes(currentFilter)
             );
             

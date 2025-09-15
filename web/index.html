@@ -178,13 +178,13 @@
         }
 
         .filter-input {
-            width: 100%;
-            padding: 12px 120px 12px 44px; /* Extra padding on right for toggle and text */
+            flex: 1;
+            padding: 12px 44px 12px 44px; /* Reduced right padding since export button is separate */
             border: 1px solid var(--border-medium);
             border-radius: var(--radius-md);
             font-size: 14px;
             line-height: 1.5;
-            margin-bottom: 20px;
+            margin-bottom: 0; /* Remove margin since container handles spacing */
             background: var(--primary-bg);
             transition: border-color 0.15s ease, box-shadow 0.15s ease;
             position: relative;
@@ -216,6 +216,8 @@
             position: relative;
             display: flex;
             align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
         }
 
         .search-mode-toggle {
@@ -454,25 +456,25 @@
             font-weight: 500;
         }
 
-        .export-section {
-            margin-bottom: 16px;
-            text-align: center;
-        }
-
         .export-btn {
             background: var(--accent-primary);
             color: white;
             border: none;
             border-radius: var(--radius-md);
-            padding: 10px 16px;
-            font-size: 13px;
+            padding: 0 12px;
+            font-size: 12px;
             font-weight: 600;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
+            gap: 6px;
             transition: all 0.15s ease;
             box-shadow: var(--shadow-sm);
+            flex-shrink: 0;
+            white-space: nowrap;
+            height: 48px; /* Match the search input height */
+            box-sizing: border-box;
         }
 
         .export-btn:hover {
@@ -1391,19 +1393,16 @@
                 <div id="carSearchSection" class="search-section">
                 <div class="filter-container">
                     <span class="search-icon">🔍</span>
-                <input type="text" id="searchInput" class="filter-input" 
+                    <input type="text" id="searchInput" class="filter-input" 
                            placeholder="Search references (e.g., CAR-D29, CAR-OTP, P-0080)...">
+                    <button id="exportBtn" class="export-btn" style="display: none;">
+                        <span class="export-icon">📊</span>
+                        Export
+                    </button>
                 </div>
                 
                 <div class="reference-count" id="referenceCount">
                     Loading references...
-                </div>
-                
-                <div class="export-section" id="exportSection" style="display: none;">
-                    <button id="exportBtn" class="export-btn">
-                        <span class="export-icon">📊</span>
-                        Export Results
-                    </button>
                 </div>
                 
                 <div class="reference-list" id="referenceList">
@@ -2651,12 +2650,12 @@
             
             if (blocksToShow.length === 0) {
                 textBlocksContainer.innerHTML = '<div class="no-results">No matching reference blocks found. Try a different search term.</div>';
-                document.getElementById('exportSection').style.display = 'none';
+                document.getElementById('exportBtn').style.display = 'none';
                 return;
             }
 
-            // Show export section when there are results
-            document.getElementById('exportSection').style.display = 'block';
+            // Show export button when there are results
+            document.getElementById('exportBtn').style.display = 'inline-flex';
             
             textBlocksContainer.innerHTML = '';
             

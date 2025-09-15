@@ -2473,15 +2473,42 @@
             
             if (!referencesData) return;
             
-            // Filter for CAR and P- reference types
+            // Get all references
             const allReferences = Object.keys(referencesData.reference_index);
-            const allRefs = allReferences.filter(ref => 
-                ref.startsWith('CAR-') || ref.startsWith('P-')
-            );
             
-            const filteredRefs = allRefs.filter(ref => 
-                ref.toLowerCase().includes(currentFilter)
-            );
+            // Determine which reference types to show based on current filter
+            let filteredRefs;
+            if (currentFilter) {
+                // If there's a search filter, only show references that match the filter
+                // and respect the reference type (P- searches shouldn't show CAR references)
+                if (currentFilter.startsWith('p-')) {
+                    // If searching for P- references, only show P- references that start with P-
+                    filteredRefs = allReferences.filter(ref => 
+                        ref.startsWith('P-') && ref.toLowerCase().includes(currentFilter)
+                    );
+                } else if (currentFilter.startsWith('car-')) {
+                    // If searching for CAR references, only show CAR references that start with CAR-
+                    filteredRefs = allReferences.filter(ref => 
+                        ref.startsWith('CAR-') && ref.toLowerCase().includes(currentFilter)
+                    );
+                } else {
+                    // If searching for something else, show both types that match
+                    // But be careful not to match P- within CAR-OTP references
+                    filteredRefs = allReferences.filter(ref => {
+                        if (ref.startsWith('P-')) {
+                            return ref.toLowerCase().includes(currentFilter.toLowerCase());
+                        } else if (ref.startsWith('CAR-')) {
+                            return ref.toLowerCase().includes(currentFilter.toLowerCase());
+                        }
+                        return false;
+                    });
+                }
+            } else {
+                // If no filter, show both CAR and P- references
+                filteredRefs = allReferences.filter(ref => 
+                    ref.startsWith('CAR-') || ref.startsWith('P-')
+                );
+            }
             
             referenceCount.innerHTML = `<strong>${filteredRefs.length}</strong> references found`;
             

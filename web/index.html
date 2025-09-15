@@ -2562,6 +2562,26 @@
                     filteredRefs = allReferences.filter(ref => 
                         ref.startsWith('CAR-') && ref.toLowerCase().includes(currentFilter)
                     );
+                } else if (currentFilter.startsWith('d29-')) {
+                    // If searching for D29- references, only show D29- witness codes (not CAR-D29-)
+                    filteredRefs = allReferences.filter(ref => 
+                        ref.startsWith('D29-') && ref.toLowerCase().includes(currentFilter)
+                    );
+                } else if (currentFilter.startsWith('d30-')) {
+                    // If searching for D30- references, only show D30- witness codes (not CAR-D30-)
+                    filteredRefs = allReferences.filter(ref => 
+                        ref.startsWith('D30-') && ref.toLowerCase().includes(currentFilter)
+                    );
+                } else if (currentFilter.startsWith('v45-')) {
+                    // If searching for V45- references, only show V45- witness codes (not CAR-V45-)
+                    filteredRefs = allReferences.filter(ref => 
+                        ref.startsWith('V45-') && ref.toLowerCase().includes(currentFilter)
+                    );
+                } else if (currentFilter.startsWith('v44-')) {
+                    // If searching for V44- references, only show V44- witness codes (not CAR-V44-)
+                    filteredRefs = allReferences.filter(ref => 
+                        ref.startsWith('V44-') && ref.toLowerCase().includes(currentFilter)
+                    );
                 } else {
                     // If searching for something else, show both types that match
                     // But be careful not to match P- within CAR-OTP references
@@ -2734,12 +2754,58 @@
             if (selectedReference) {
                 blocksToShow = referencesData.reference_index[selectedReference] || [];
             } else if (currentFilter) {
-                blocksToShow = blocksToShow.filter(block => 
-                    block.content.toLowerCase().includes(currentFilter) ||
-                    block.references.some(ref => 
-                        ref.toLowerCase().includes(currentFilter) && isReferenceType(ref)
-                    )
-                );
+                // Apply specific filtering based on search type
+                if (currentFilter.startsWith('p-')) {
+                    // If searching for P- references, only show blocks with P- references
+                    blocksToShow = blocksToShow.filter(block => 
+                        block.references.some(ref => 
+                            ref.startsWith('P-') && ref.toLowerCase().includes(currentFilter)
+                        )
+                    );
+                } else if (currentFilter.startsWith('car-')) {
+                    // If searching for CAR references, only show blocks with CAR references
+                    blocksToShow = blocksToShow.filter(block => 
+                        block.references.some(ref => 
+                            ref.startsWith('CAR-') && ref.toLowerCase().includes(currentFilter)
+                        )
+                    );
+                } else if (currentFilter.startsWith('d29-')) {
+                    // If searching for D29- references, only show blocks with D29- witness codes (not CAR-D29-)
+                    blocksToShow = blocksToShow.filter(block => 
+                        block.references.some(ref => 
+                            ref.startsWith('D29-') && ref.toLowerCase().includes(currentFilter)
+                        )
+                    );
+                } else if (currentFilter.startsWith('d30-')) {
+                    // If searching for D30- references, only show blocks with D30- witness codes (not CAR-D30-)
+                    blocksToShow = blocksToShow.filter(block => 
+                        block.references.some(ref => 
+                            ref.startsWith('D30-') && ref.toLowerCase().includes(currentFilter)
+                        )
+                    );
+                } else if (currentFilter.startsWith('v45-')) {
+                    // If searching for V45- references, only show blocks with V45- witness codes (not CAR-V45-)
+                    blocksToShow = blocksToShow.filter(block => 
+                        block.references.some(ref => 
+                            ref.startsWith('V45-') && ref.toLowerCase().includes(currentFilter)
+                        )
+                    );
+                } else if (currentFilter.startsWith('v44-')) {
+                    // If searching for V44- references, only show blocks with V44- witness codes (not CAR-V44-)
+                    blocksToShow = blocksToShow.filter(block => 
+                        block.references.some(ref => 
+                            ref.startsWith('V44-') && ref.toLowerCase().includes(currentFilter)
+                        )
+                    );
+                } else {
+                    // For other searches, show blocks with any matching reference types
+                    blocksToShow = blocksToShow.filter(block => 
+                        block.content.toLowerCase().includes(currentFilter) ||
+                        block.references.some(ref => 
+                            ref.toLowerCase().includes(currentFilter) && isReferenceType(ref)
+                        )
+                    );
+                }
             } else {
                 // Show blocks with all supported reference types by default
                 blocksToShow = blocksToShow.filter(block =>

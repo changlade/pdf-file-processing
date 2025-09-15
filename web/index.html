@@ -37,9 +37,13 @@
             --accent-primary: #C15F3C;       /* Crail - primary accent */
             --accent-primary-light: #D47A5A; /* Lighter terracotta for hover */
             --accent-primary-bg: #FDF4F0;    /* Very light terracotta background */
-            --accent-secondary: #B1ADA1;     /* Cloudy - secondary accent */
-            --accent-secondary-light: #C4C0B8; /* Lighter cloudy for hover */
-            --accent-secondary-bg: #F8F7F5;  /* Very light cloudy background */
+            --accent-secondary: #2F5D62;     /* Teal - witness codes */
+            --accent-secondary-light: #4A7A7F; /* Lighter teal for hover */
+            --accent-secondary-bg: #F0F4F5;  /* Very light teal background */
+            
+            /* Reference marker colors */
+            --evidence-color: #A39BB0;       /* Purple-gray - evidence codes only */
+            --evidence-color-light: #B8B0C7; /* Lighter purple-gray for hover */
             --accent-warm: #E8A87C;          /* Warm orange complement */
             --accent-warm-light: #F0C19A;    /* Lighter warm orange */
             --accent-warm-bg: #FEF9F5;       /* Very light warm background */
@@ -505,8 +509,6 @@
             display: inline-flex;
             justify-content: space-between;
             align-items: center;
-            background: var(--accent-secondary);
-            color: white;
             padding: 6px 12px;
             margin: 2px;
             border-radius: var(--radius-sm);
@@ -518,6 +520,21 @@
             letter-spacing: 0.025em;
             min-width: fit-content;
             max-width: fit-content;
+        }
+
+        .reference-tag.ref-tag-evidence {
+            background: var(--evidence-color);
+            color: white;
+        }
+
+        .reference-tag.ref-tag-witness {
+            background: var(--accent-secondary);
+            color: white;
+        }
+
+        .reference-tag.ref-tag-unknown {
+            background: var(--text-muted);
+            color: white;
         }
 
         .ref-name {
@@ -532,8 +549,18 @@
             flex-shrink: 0;
         }
 
-        .reference-tag:hover {
+        .reference-tag.ref-tag-evidence:hover {
+            background: var(--evidence-color-light);
+            transform: translateY(-1px);
+        }
+
+        .reference-tag.ref-tag-witness:hover {
             background: var(--accent-secondary-light);
+            transform: translateY(-1px);
+        }
+
+        .reference-tag.ref-tag-unknown:hover {
+            background: var(--text-secondary);
             transform: translateY(-1px);
         }
 
@@ -630,13 +657,43 @@
         }
 
         .block-ref-tag {
-            background: var(--accent-warm);
-            color: white;
             padding: 3px 8px;
             border-radius: var(--radius-sm);
             font-size: 10px;
             font-weight: 500;
             letter-spacing: 0.025em;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .ref-tag-evidence {
+            background: var(--evidence-color);
+            color: white;
+        }
+
+        .ref-tag-evidence:hover {
+            background: var(--evidence-color-light);
+            transform: translateY(-1px);
+        }
+
+        .ref-tag-witness {
+            background: var(--accent-secondary);
+            color: white;
+        }
+
+        .ref-tag-witness:hover {
+            background: var(--accent-secondary-light);
+            transform: translateY(-1px);
+        }
+
+        .ref-tag-unknown {
+            background: var(--text-muted);
+            color: white;
+        }
+
+        .ref-tag-unknown:hover {
+            background: var(--text-secondary);
+            transform: translateY(-1px);
         }
 
         .block-text {
@@ -2069,16 +2126,30 @@
             if (result.relevance_score) {
                 const scoreTag = document.createElement('span');
                 scoreTag.className = 'block-ref-tag';
-                scoreTag.style.background = '#7BC47F'; // More visible green for confidence
                 scoreTag.style.fontWeight = '600';
-                scoreTag.textContent = calculateConfidenceLevel(result.relevance_score);
+                
+                // Set color based on confidence level
+                const confidenceLevel = calculateConfidenceLevel(result.relevance_score);
+                if (confidenceLevel === 'Very high confidence') {
+                    scoreTag.style.background = '#E9F5EC'; // Light green for very high
+                    scoreTag.style.color = '#2D5A3D'; // Dark green text
+                } else if (confidenceLevel === 'High confidence') {
+                    scoreTag.style.background = '#FEF6E7'; // Light yellow for high
+                    scoreTag.style.color = '#8B5A00'; // Dark yellow text
+                } else {
+                    scoreTag.style.background = '#FCE8E3'; // Light red for low
+                    scoreTag.style.color = '#8B3A3A'; // Dark red text
+                }
+                
+                scoreTag.textContent = confidenceLevel;
                 metadata.appendChild(scoreTag);
             }
             
             // Add section type
             const sectionTag = document.createElement('span');
             sectionTag.className = 'block-ref-tag';
-            sectionTag.style.background = '#8FA3D1'; // More visible blue for sections
+            sectionTag.style.background = '#34495E'; // Dark blue-gray for sections
+            sectionTag.style.color = '#FFFFFF'; // White text for contrast
             sectionTag.textContent = result.section_type;
             metadata.appendChild(sectionTag);
             
@@ -2504,10 +2575,8 @@
                     });
                 }
             } else {
-                // If no filter, show both CAR and P- references
-                filteredRefs = allReferences.filter(ref => 
-                    ref.startsWith('CAR-') || ref.startsWith('P-')
-                );
+                // If no filter, show all supported reference types
+                filteredRefs = allReferences.filter(ref => isReferenceType(ref));
             }
             
             referenceCount.innerHTML = `<strong>${filteredRefs.length}</strong> references found`;
@@ -2529,7 +2598,7 @@
             sortedRefs.slice(0, 50).forEach(ref => { // Show only first 50 for performance
                 const count = referencesData.reference_index[ref].length;
                 const tag = document.createElement('button');
-                tag.className = 'reference-tag';
+                tag.className = `reference-tag ${getReferenceClass(ref)}`;
                 tag.onclick = () => selectReference(ref);
                 
                 // Create structured layout for reference and count
@@ -2582,15 +2651,15 @@
             } else if (currentFilter) {
                 // Export filtered results
                 blocksToExport = referencesData.reference_blocks.filter(block => 
-                    block.text_block.toLowerCase().includes(currentFilter) ||
+                    block.content.toLowerCase().includes(currentFilter) ||
                     block.references.some(ref => 
-                        ref.toLowerCase().includes(currentFilter) && (ref.startsWith('CAR-') || ref.startsWith('P-'))
+                        ref.toLowerCase().includes(currentFilter) && isReferenceType(ref)
                     )
                 );
             } else {
-                // Export all CAR and P- reference blocks
+                // Export all supported reference blocks
                 blocksToExport = referencesData.reference_blocks.filter(block =>
-                    block.references.some(ref => ref.startsWith('CAR-') || ref.startsWith('P-'))
+                    block.references.some(ref => isReferenceType(ref))
                 );
             }
 
@@ -2607,7 +2676,7 @@
         }
 
         function createCSVContent(blocks) {
-            const headers = ['Reference', 'Page Number', 'Text Block', 'All References'];
+            const headers = ['Reference', 'Status', 'Page Number', 'Text Block', 'All References'];
             const rows = [headers.join(',')];
 
             blocks.forEach(block => {
@@ -2616,17 +2685,20 @@
                     if (selectedReference) {
                         return ref === selectedReference;
                     } else if (currentFilter) {
-                        return ref.toLowerCase().includes(currentFilter) && (ref.startsWith('CAR-') || ref.startsWith('P-'));
+                        return ref.toLowerCase().includes(currentFilter) && isReferenceType(ref);
                     } else {
-                        return ref.startsWith('CAR-') || ref.startsWith('P-');
+                        return isReferenceType(ref);
                     }
                 });
 
                 matchingRefs.forEach(ref => {
+                    const status = getReferenceCategory(ref);
+                    const statusText = status === 'evidence' ? 'Evidence' : status === 'witness' ? 'Witness' : 'Unknown';
                     const row = [
                         `"${ref}"`,
+                        `"${statusText}"`,
                         block.page_number,
-                        `"${block.text_block.replace(/"/g, '""')}"`, // Escape quotes in text
+                        `"${block.content.replace(/"/g, '""')}"`, // Escape quotes in text
                         `"${block.references.join('; ')}"`
                     ];
                     rows.push(row.join(','));
@@ -2663,15 +2735,15 @@
                 blocksToShow = referencesData.reference_index[selectedReference] || [];
             } else if (currentFilter) {
                 blocksToShow = blocksToShow.filter(block => 
-                    block.text_block.toLowerCase().includes(currentFilter) ||
+                    block.content.toLowerCase().includes(currentFilter) ||
                     block.references.some(ref => 
-                        ref.toLowerCase().includes(currentFilter) && (ref.startsWith('CAR-') || ref.startsWith('P-'))
+                        ref.toLowerCase().includes(currentFilter) && isReferenceType(ref)
                     )
                 );
             } else {
-                // Show blocks with CAR and P- references by default
+                // Show blocks with all supported reference types by default
                 blocksToShow = blocksToShow.filter(block =>
-                    block.references.some(ref => ref.startsWith('CAR-') || ref.startsWith('P-'))
+                    block.references.some(ref => isReferenceType(ref))
                 );
             }
             
@@ -2723,13 +2795,11 @@
             const references = document.createElement('div');
             references.className = 'block-references';
             
-            // Show CAR and P- reference types in the tags
-            const allRefs = block.references.filter(ref => 
-                ref.startsWith('CAR-') || ref.startsWith('P-')
-            );
+            // Show all supported reference types in the tags
+            const allRefs = block.references.filter(ref => isReferenceType(ref));
             allRefs.forEach(ref => {
                 const refTag = document.createElement('span');
-                refTag.className = 'block-ref-tag';
+                refTag.className = `block-ref-tag ${getReferenceClass(ref)}`;
                 refTag.textContent = ref;
                 references.appendChild(refTag);
             });
@@ -2741,9 +2811,24 @@
             blockText.className = 'block-text';
             
             // Highlight search terms in text
-            let displayText = block.text_block;
+            let displayText = block.content;
             if (currentFilter) {
-                const regex = new RegExp(`(${escapeRegex(currentFilter)})`, 'gi');
+                // Create a more specific regex based on the search term
+                let regex;
+                if (currentFilter.startsWith('p-')) {
+                    // For P- searches, only match actual P- references, not P- within CAR-OTP-
+                    // Use negative lookbehind to ensure it's not preceded by "CAR-OT"
+                    regex = new RegExp(`(?<!CAR-OT)(${escapeRegex(currentFilter)})`, 'gi');
+                } else if (currentFilter.startsWith('car-')) {
+                    // For CAR- searches, match CAR- references
+                    regex = new RegExp(`\\b(${escapeRegex(currentFilter)})`, 'gi');
+                } else if (currentFilter.startsWith('d29-') || currentFilter.startsWith('d30-')) {
+                    // For D29- and D30- searches, match these references
+                    regex = new RegExp(`\\b(${escapeRegex(currentFilter)})`, 'gi');
+                } else {
+                    // For other searches, use the original logic
+                    regex = new RegExp(`(${escapeRegex(currentFilter)})`, 'gi');
+                }
                 displayText = displayText.replace(regex, '<span class="search-highlight">$1</span>');
             }
             
@@ -2782,7 +2867,7 @@
             // No highlighting - just navigate to the page
             console.log(`Navigated to page ${pageNumber} for block with references:`, 
                         blockData && blockData.references ? blockData.references.filter(ref => 
-                            ref.startsWith('CAR-') || ref.startsWith('P-')
+                            isReferenceType(ref)
                         ) : []);
         }
 
@@ -2838,6 +2923,27 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        function isReferenceType(ref) {
+            // Check if reference matches any of our supported types
+            return ref.startsWith('CAR-') || ref.startsWith('P-') || ref.startsWith('D29-') || ref.startsWith('D30-') || ref.startsWith('V45-') || ref.startsWith('V44-');
+        }
+
+        function getReferenceCategory(ref) {
+            // Categorize reference as evidence or witness
+            if (ref.startsWith('CAR-')) {
+                return 'evidence';
+            } else if (ref.startsWith('P-') || ref.startsWith('D29-') || ref.startsWith('D30-') || ref.startsWith('V45-') || ref.startsWith('V44-')) {
+                return 'witness';
+            }
+            return 'unknown';
+        }
+
+        function getReferenceClass(ref) {
+            // Get CSS class for reference styling
+            const category = getReferenceCategory(ref);
+            return `ref-tag-${category}`;
         }
 
         function showError(message) {

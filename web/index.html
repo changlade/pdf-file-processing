@@ -1591,6 +1591,7 @@
     <script>
         // Global variables
         let referencesData = null;
+        let blockContentData = null;
         let pdfData = null;
         let pdfDoc = null;
         let currentFilter = '';
@@ -2344,6 +2345,9 @@
                     blocks: referencesData.extraction_info.total_reference_blocks
                 });
                 
+                // Load block content data
+                await loadBlockContentData();
+                
                 // Load PDF
                 await loadPDF();
                 
@@ -2354,6 +2358,26 @@
                 console.error('Error loading data:', error);
                 showError('Failed to load data files. Make sure the data folder contains car_references.json and jugement.pdf');
             }
+        }
+
+        async function loadBlockContentData() {
+            try {
+                const response = await fetch('../data/block_content.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                blockContentData = await response.json();
+                console.log('Block content data loaded:', Object.keys(blockContentData).length, 'blocks');
+            } catch (error) {
+                console.error('Error loading block content data:', error);
+                // Don't show error to user, just log it
+                blockContentData = {};
+            }
+        }
+
+        function getBlockContent(blockId) {
+            // Get content from blockContentData, fallback to empty string
+            return blockContentData && blockContentData[blockId] ? blockContentData[blockId].content : '';
         }
 
         async function loadPDF() {
@@ -2714,12 +2738,13 @@
                     );
                 } else {
                     // For other searches, show blocks with any matching reference types
-                    blocksToExport = referencesData.reference_blocks.filter(block => 
-                        block.content.toLowerCase().includes(currentFilter) ||
-                        block.references.some(ref => 
-                            ref.toLowerCase().includes(currentFilter) && isReferenceType(ref)
-                        )
-                    );
+                    blocksToExport = referencesData.reference_blocks.filter(block => {
+                        const content = getBlockContent(block.block_id);
+                        return content.toLowerCase().includes(currentFilter) ||
+                            block.references.some(ref => 
+                                ref.toLowerCase().includes(currentFilter) && isReferenceType(ref)
+                            );
+                    });
                 }
             } else {
                 // Export all supported reference blocks
@@ -2778,7 +2803,7 @@
                         `"${ref}"`,
                         `"${statusText}"`,
                         block.page_number,
-                        `"${block.content.replace(/"/g, '""')}"`, // Escape quotes in text
+                        `"${getBlockContent(block.block_id).replace(/"/g, '""')}"`, // Escape quotes in text
                         `"${block.references.join('; ')}"`
                     ];
                     rows.push(row.join(','));
@@ -2859,12 +2884,13 @@
                     );
                 } else {
                     // For other searches, show blocks with any matching reference types
-                    blocksToShow = blocksToShow.filter(block => 
-                        block.content.toLowerCase().includes(currentFilter) ||
-                        block.references.some(ref => 
-                            ref.toLowerCase().includes(currentFilter) && isReferenceType(ref)
-                        )
-                    );
+                    blocksToShow = blocksToShow.filter(block => {
+                        const content = getBlockContent(block.block_id);
+                        return content.toLowerCase().includes(currentFilter) ||
+                            block.references.some(ref => 
+                                ref.toLowerCase().includes(currentFilter) && isReferenceType(ref)
+                            );
+                    });
                 }
             } else {
                 // Show blocks with all supported reference types by default
@@ -2937,7 +2963,7 @@
             blockText.className = 'block-text';
             
             // Highlight search terms in text
-            let displayText = block.content;
+            let displayText = getBlockContent(block.block_id);
             if (currentFilter) {
                 // Create a more specific regex based on the search term
                 let regex;

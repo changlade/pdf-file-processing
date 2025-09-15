@@ -2888,9 +2888,22 @@
                 } else if (currentFilter.startsWith('car-')) {
                     // For CAR- searches, match CAR- references
                     regex = new RegExp(`\\b(${escapeRegex(currentFilter)})`, 'gi');
-                } else if (currentFilter.startsWith('d29-') || currentFilter.startsWith('d30-')) {
-                    // For D29- and D30- searches, match these references
-                    regex = new RegExp(`\\b(${escapeRegex(currentFilter)})`, 'gi');
+                } else if (currentFilter.startsWith('d29-')) {
+                    // For D29- searches, only match actual D29- references, not D29- within CAR-D29-
+                    // Use negative lookbehind to ensure it's not preceded by "CAR-"
+                    regex = new RegExp(`(?<!CAR-)(${escapeRegex(currentFilter)})`, 'gi');
+                } else if (currentFilter.startsWith('d30-')) {
+                    // For D30- searches, only match actual D30- references, not D30- within CAR-D30-
+                    // Use negative lookbehind to ensure it's not preceded by "CAR-"
+                    regex = new RegExp(`(?<!CAR-)(${escapeRegex(currentFilter)})`, 'gi');
+                } else if (currentFilter.startsWith('v45-')) {
+                    // For V45- searches, only match actual V45- references, not V45- within CAR-V45-
+                    // Use negative lookbehind to ensure it's not preceded by "CAR-"
+                    regex = new RegExp(`(?<!CAR-)(${escapeRegex(currentFilter)})`, 'gi');
+                } else if (currentFilter.startsWith('v44-')) {
+                    // For V44- searches, only match actual V44- references, not V44- within CAR-V44-
+                    // Use negative lookbehind to ensure it's not preceded by "CAR-"
+                    regex = new RegExp(`(?<!CAR-)(${escapeRegex(currentFilter)})`, 'gi');
                 } else {
                     // For other searches, use the original logic
                     regex = new RegExp(`(${escapeRegex(currentFilter)})`, 'gi');

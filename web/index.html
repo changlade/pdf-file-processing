@@ -2563,24 +2563,24 @@
                         ref.startsWith('CAR-') && ref.toLowerCase().includes(currentFilter)
                     );
                 } else if (currentFilter.startsWith('d29-')) {
-                    // If searching for D29- references, only show D29- witness codes (not CAR-D29-)
+                    // If searching for D29- references, only show standalone D29- witness codes (not CAR-D29-)
                     filteredRefs = allReferences.filter(ref => 
-                        ref.startsWith('D29-') && ref.toLowerCase().includes(currentFilter)
+                        ref.startsWith('D29-') && ref.toLowerCase().includes(currentFilter) && isStandaloneWitnessCode(ref)
                     );
                 } else if (currentFilter.startsWith('d30-')) {
-                    // If searching for D30- references, only show D30- witness codes (not CAR-D30-)
+                    // If searching for D30- references, only show standalone D30- witness codes (not CAR-D30-)
                     filteredRefs = allReferences.filter(ref => 
-                        ref.startsWith('D30-') && ref.toLowerCase().includes(currentFilter)
+                        ref.startsWith('D30-') && ref.toLowerCase().includes(currentFilter) && isStandaloneWitnessCode(ref)
                     );
                 } else if (currentFilter.startsWith('v45-')) {
-                    // If searching for V45- references, only show V45- witness codes (not CAR-V45-)
+                    // If searching for V45- references, only show standalone V45- witness codes (not CAR-V45-)
                     filteredRefs = allReferences.filter(ref => 
-                        ref.startsWith('V45-') && ref.toLowerCase().includes(currentFilter)
+                        ref.startsWith('V45-') && ref.toLowerCase().includes(currentFilter) && isStandaloneWitnessCode(ref)
                     );
                 } else if (currentFilter.startsWith('v44-')) {
-                    // If searching for V44- references, only show V44- witness codes (not CAR-V44-)
+                    // If searching for V44- references, only show standalone V44- witness codes (not CAR-V44-)
                     filteredRefs = allReferences.filter(ref => 
-                        ref.startsWith('V44-') && ref.toLowerCase().includes(currentFilter)
+                        ref.startsWith('V44-') && ref.toLowerCase().includes(currentFilter) && isStandaloneWitnessCode(ref)
                     );
                 } else {
                     // If searching for something else, show both types that match
@@ -2669,13 +2669,58 @@
                 // Export specific reference
                 blocksToExport = referencesData.reference_index[selectedReference] || [];
             } else if (currentFilter) {
-                // Export filtered results
-                blocksToExport = referencesData.reference_blocks.filter(block => 
-                    block.content.toLowerCase().includes(currentFilter) ||
-                    block.references.some(ref => 
-                        ref.toLowerCase().includes(currentFilter) && isReferenceType(ref)
-                    )
-                );
+                // Apply specific filtering based on search type (same as updateTextBlocks)
+                if (currentFilter.startsWith('p-')) {
+                    // If searching for P- references, only show blocks with P- references
+                    blocksToExport = referencesData.reference_blocks.filter(block => 
+                        block.references.some(ref => 
+                            ref.startsWith('P-') && ref.toLowerCase().includes(currentFilter)
+                        )
+                    );
+                } else if (currentFilter.startsWith('car-')) {
+                    // If searching for CAR references, only show blocks with CAR references
+                    blocksToExport = referencesData.reference_blocks.filter(block => 
+                        block.references.some(ref => 
+                            ref.startsWith('CAR-') && ref.toLowerCase().includes(currentFilter)
+                        )
+                    );
+                } else if (currentFilter.startsWith('d29-')) {
+                    // If searching for D29- references, only show blocks with standalone D29- witness codes (not CAR-D29-)
+                    blocksToExport = referencesData.reference_blocks.filter(block => 
+                        block.references.some(ref => 
+                            ref.startsWith('D29-') && ref.toLowerCase().includes(currentFilter) && isStandaloneWitnessCode(ref)
+                        )
+                    );
+                } else if (currentFilter.startsWith('d30-')) {
+                    // If searching for D30- references, only show blocks with standalone D30- witness codes (not CAR-D30-)
+                    blocksToExport = referencesData.reference_blocks.filter(block => 
+                        block.references.some(ref => 
+                            ref.startsWith('D30-') && ref.toLowerCase().includes(currentFilter) && isStandaloneWitnessCode(ref)
+                        )
+                    );
+                } else if (currentFilter.startsWith('v45-')) {
+                    // If searching for V45- references, only show blocks with standalone V45- witness codes (not CAR-V45-)
+                    blocksToExport = referencesData.reference_blocks.filter(block => 
+                        block.references.some(ref => 
+                            ref.startsWith('V45-') && ref.toLowerCase().includes(currentFilter) && isStandaloneWitnessCode(ref)
+                        )
+                    );
+                } else if (currentFilter.startsWith('v44-')) {
+                    // If searching for V44- references, only show blocks with standalone V44- witness codes (not CAR-V44-)
+                    blocksToExport = referencesData.reference_blocks.filter(block => 
+                        block.references.some(ref => 
+                            ref.startsWith('V44-') && ref.toLowerCase().includes(currentFilter) && isStandaloneWitnessCode(ref)
+                        )
+                    );
+                } else {
+                    // For other searches, show blocks with any matching reference types
+                    blocksToExport = referencesData.reference_blocks.filter(block => 
+                        block.content.toLowerCase().includes(currentFilter) ||
+                        block.references.some(ref => 
+                            ref.toLowerCase().includes(currentFilter) && isReferenceType(ref)
+                        )
+                    );
+                }
             } else {
                 // Export all supported reference blocks
                 blocksToExport = referencesData.reference_blocks.filter(block =>
@@ -2705,7 +2750,22 @@
                     if (selectedReference) {
                         return ref === selectedReference;
                     } else if (currentFilter) {
-                        return ref.toLowerCase().includes(currentFilter) && isReferenceType(ref);
+                        // Apply specific filtering based on search type
+                        if (currentFilter.startsWith('p-')) {
+                            return ref.startsWith('P-') && ref.toLowerCase().includes(currentFilter);
+                        } else if (currentFilter.startsWith('car-')) {
+                            return ref.startsWith('CAR-') && ref.toLowerCase().includes(currentFilter);
+                        } else if (currentFilter.startsWith('d29-')) {
+                            return ref.startsWith('D29-') && ref.toLowerCase().includes(currentFilter) && isStandaloneWitnessCode(ref);
+                        } else if (currentFilter.startsWith('d30-')) {
+                            return ref.startsWith('D30-') && ref.toLowerCase().includes(currentFilter) && isStandaloneWitnessCode(ref);
+                        } else if (currentFilter.startsWith('v45-')) {
+                            return ref.startsWith('V45-') && ref.toLowerCase().includes(currentFilter) && isStandaloneWitnessCode(ref);
+                        } else if (currentFilter.startsWith('v44-')) {
+                            return ref.startsWith('V44-') && ref.toLowerCase().includes(currentFilter) && isStandaloneWitnessCode(ref);
+                        } else {
+                            return ref.toLowerCase().includes(currentFilter) && isReferenceType(ref);
+                        }
                     } else {
                         return isReferenceType(ref);
                     }
@@ -2770,31 +2830,31 @@
                         )
                     );
                 } else if (currentFilter.startsWith('d29-')) {
-                    // If searching for D29- references, only show blocks with D29- witness codes (not CAR-D29-)
+                    // If searching for D29- references, only show blocks with standalone D29- witness codes (not CAR-D29-)
                     blocksToShow = blocksToShow.filter(block => 
                         block.references.some(ref => 
-                            ref.startsWith('D29-') && ref.toLowerCase().includes(currentFilter)
+                            ref.startsWith('D29-') && ref.toLowerCase().includes(currentFilter) && isStandaloneWitnessCode(ref)
                         )
                     );
                 } else if (currentFilter.startsWith('d30-')) {
-                    // If searching for D30- references, only show blocks with D30- witness codes (not CAR-D30-)
+                    // If searching for D30- references, only show blocks with standalone D30- witness codes (not CAR-D30-)
                     blocksToShow = blocksToShow.filter(block => 
                         block.references.some(ref => 
-                            ref.startsWith('D30-') && ref.toLowerCase().includes(currentFilter)
+                            ref.startsWith('D30-') && ref.toLowerCase().includes(currentFilter) && isStandaloneWitnessCode(ref)
                         )
                     );
                 } else if (currentFilter.startsWith('v45-')) {
-                    // If searching for V45- references, only show blocks with V45- witness codes (not CAR-V45-)
+                    // If searching for V45- references, only show blocks with standalone V45- witness codes (not CAR-V45-)
                     blocksToShow = blocksToShow.filter(block => 
                         block.references.some(ref => 
-                            ref.startsWith('V45-') && ref.toLowerCase().includes(currentFilter)
+                            ref.startsWith('V45-') && ref.toLowerCase().includes(currentFilter) && isStandaloneWitnessCode(ref)
                         )
                     );
                 } else if (currentFilter.startsWith('v44-')) {
-                    // If searching for V44- references, only show blocks with V44- witness codes (not CAR-V44-)
+                    // If searching for V44- references, only show blocks with standalone V44- witness codes (not CAR-V44-)
                     blocksToShow = blocksToShow.filter(block => 
                         block.references.some(ref => 
-                            ref.startsWith('V44-') && ref.toLowerCase().includes(currentFilter)
+                            ref.startsWith('V44-') && ref.toLowerCase().includes(currentFilter) && isStandaloneWitnessCode(ref)
                         )
                     );
                 } else {
@@ -3007,6 +3067,31 @@
         function isReferenceType(ref) {
             // Check if reference matches any of our supported types
             return ref.startsWith('CAR-') || ref.startsWith('P-') || ref.startsWith('D29-') || ref.startsWith('D30-') || ref.startsWith('V45-') || ref.startsWith('V44-');
+        }
+
+        function isStandaloneWitnessCode(ref) {
+            // Check if a witness code (D29-, D30-, V45-, V44-) is standalone and not part of a CAR- reference
+            if (!ref.startsWith('D29-') && !ref.startsWith('D30-') && !ref.startsWith('V45-') && !ref.startsWith('V44-')) {
+                return false; // Not a witness code
+            }
+            
+            // Check if this witness code is actually part of a CAR- reference
+            // by looking for CAR- references that contain this witness code
+            if (!referencesData || !referencesData.reference_index) {
+                return true; // If no data, assume it's standalone
+            }
+            
+            const allReferences = Object.keys(referencesData.reference_index);
+            const carReferences = allReferences.filter(r => r.startsWith('CAR-'));
+            
+            // Check if any CAR- reference contains this witness code as a substring
+            for (const carRef of carReferences) {
+                if (carRef.includes(ref)) {
+                    return false; // This witness code is part of a CAR- reference
+                }
+            }
+            
+            return true; // This witness code is standalone
         }
 
         function getReferenceCategory(ref) {

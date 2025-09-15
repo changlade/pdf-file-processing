@@ -454,6 +454,42 @@
             font-weight: 500;
         }
 
+        .export-section {
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .export-btn {
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.15s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .export-btn:hover {
+            background: var(--accent-primary-light);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .export-btn:active {
+            transform: translateY(0);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .export-icon {
+            font-size: 14px;
+        }
+
         .reference-list {
             max-height: 200px;
             overflow-y: auto;
@@ -1363,6 +1399,13 @@
                     Loading references...
                 </div>
                 
+                <div class="export-section" id="exportSection" style="display: none;">
+                    <button id="exportBtn" class="export-btn">
+                        <span class="export-icon">📊</span>
+                        Export Results
+                    </button>
+                </div>
+                
                 <div class="reference-list" id="referenceList">
                     <!-- Reference tags will be populated here -->
                     </div>
@@ -1553,6 +1596,10 @@
                 updateTextBlocks();
                 }
             });
+
+            // Export button
+            const exportBtn = document.getElementById('exportBtn');
+            exportBtn.addEventListener('click', exportSearchResults);
 
             // Mode toggle buttons
             const carModeBtn = document.getElementById('carModeBtn');
@@ -2495,6 +2542,89 @@
             updateTextBlocks();
         }
 
+        function exportSearchResults() {
+            if (!referencesData) {
+                alert('No data available to export');
+                return;
+            }
+
+            let blocksToExport = [];
+            
+            if (selectedReference) {
+                // Export specific reference
+                blocksToExport = referencesData.reference_index[selectedReference] || [];
+            } else if (currentFilter) {
+                // Export filtered results
+                blocksToExport = referencesData.reference_blocks.filter(block => 
+                    block.text_block.toLowerCase().includes(currentFilter) ||
+                    block.references.some(ref => 
+                        ref.toLowerCase().includes(currentFilter) && (ref.startsWith('CAR-') || ref.startsWith('P-'))
+                    )
+                );
+            } else {
+                // Export all CAR and P- reference blocks
+                blocksToExport = referencesData.reference_blocks.filter(block =>
+                    block.references.some(ref => ref.startsWith('CAR-') || ref.startsWith('P-'))
+                );
+            }
+
+            if (blocksToExport.length === 0) {
+                alert('No results to export');
+                return;
+            }
+
+            // Create CSV content
+            const csvContent = createCSVContent(blocksToExport);
+            
+            // Download the file
+            downloadCSV(csvContent, `search_results_${new Date().toISOString().split('T')[0]}.csv`);
+        }
+
+        function createCSVContent(blocks) {
+            const headers = ['Reference', 'Page Number', 'Text Block', 'All References'];
+            const rows = [headers.join(',')];
+
+            blocks.forEach(block => {
+                // Find the matching reference(s) for this block
+                const matchingRefs = block.references.filter(ref => {
+                    if (selectedReference) {
+                        return ref === selectedReference;
+                    } else if (currentFilter) {
+                        return ref.toLowerCase().includes(currentFilter) && (ref.startsWith('CAR-') || ref.startsWith('P-'));
+                    } else {
+                        return ref.startsWith('CAR-') || ref.startsWith('P-');
+                    }
+                });
+
+                matchingRefs.forEach(ref => {
+                    const row = [
+                        `"${ref}"`,
+                        block.page_number,
+                        `"${block.text_block.replace(/"/g, '""')}"`, // Escape quotes in text
+                        `"${block.references.join('; ')}"`
+                    ];
+                    rows.push(row.join(','));
+                });
+            });
+
+            return rows.join('\n');
+        }
+
+        function downloadCSV(content, filename) {
+            const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
         function updateTextBlocks() {
             const textBlocksContainer = document.getElementById('textBlocks');
             
@@ -2509,20 +2639,24 @@
                 blocksToShow = blocksToShow.filter(block => 
                     block.text_block.toLowerCase().includes(currentFilter) ||
                     block.references.some(ref => 
-                        ref.toLowerCase().includes(currentFilter) && ref.startsWith('CAR-')
+                        ref.toLowerCase().includes(currentFilter) && (ref.startsWith('CAR-') || ref.startsWith('P-'))
                     )
                 );
             } else {
-                // Show only blocks with CAR references by default
+                // Show blocks with CAR and P- references by default
                 blocksToShow = blocksToShow.filter(block =>
-                    block.references.some(ref => ref.startsWith('CAR-'))
+                    block.references.some(ref => ref.startsWith('CAR-') || ref.startsWith('P-'))
                 );
             }
             
             if (blocksToShow.length === 0) {
-                textBlocksContainer.innerHTML = '<div class="no-results">No matching CAR reference blocks found. Try a different search term.</div>';
+                textBlocksContainer.innerHTML = '<div class="no-results">No matching reference blocks found. Try a different search term.</div>';
+                document.getElementById('exportSection').style.display = 'none';
                 return;
             }
+
+            // Show export section when there are results
+            document.getElementById('exportSection').style.display = 'block';
             
             textBlocksContainer.innerHTML = '';
             

@@ -65,3 +65,11 @@ flask_proxy.py
 
 # Source directory (we're using the root-level files)
 src/
+
+# Extraction scripts (not needed in production)
+extract_*.py
+optimize_references.py
+
+# Old/unused data files
+data/JUDGMENT_parsed.csv
+data/*_optimized.json

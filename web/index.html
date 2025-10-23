@@ -1849,20 +1849,41 @@
                         ref.startsWith('V44-') && ref.toLowerCase().includes(currentFilter) && isStandaloneWitnessCode(ref)
                     );
                 } else {
-                    // If searching for something else, show both types that match
-                    // But be careful not to match P- within CAR-OTP references
+                    // Generic search: show all reference types that match
                     filteredRefs = allReferences.filter(ref => {
-                        if (ref.startsWith('P-')) {
-                            return ref.toLowerCase().includes(currentFilter.toLowerCase());
-                        } else if (ref.startsWith('CAR-')) {
-                            return ref.toLowerCase().includes(currentFilter.toLowerCase());
+                        // Must match the filter
+                        if (!ref.toLowerCase().includes(currentFilter.toLowerCase())) {
+                            return false;
                         }
-                        return false;
+                        
+                        // Must be a supported reference type
+                        if (!isReferenceType(ref)) {
+                            return false;
+                        }
+                        
+                        // For witness codes, only show standalone ones
+                        if (ref.startsWith('D29-') || ref.startsWith('D30-') || ref.startsWith('V45-') || ref.startsWith('V44-')) {
+                            return isStandaloneWitnessCode(ref);
+                        }
+                        
+                        return true;
                     });
                 }
             } else {
                 // If no filter, show all supported reference types
-                filteredRefs = allReferences.filter(ref => isReferenceType(ref));
+                // But only show standalone witness codes (not embedded in CAR- references)
+                filteredRefs = allReferences.filter(ref => {
+                    if (!isReferenceType(ref)) {
+                        return false;
+                    }
+                    
+                    // For witness codes, only show standalone ones
+                    if (ref.startsWith('D29-') || ref.startsWith('D30-') || ref.startsWith('V45-') || ref.startsWith('V44-')) {
+                        return isStandaloneWitnessCode(ref);
+                    }
+                    
+                    return true;
+                });
             }
             
             referenceCount.innerHTML = `<strong>${filteredRefs.length}</strong> references found`;

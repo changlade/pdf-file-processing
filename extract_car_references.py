@@ -63,20 +63,23 @@ def extract_car_references(pdf_content_path, output_path):
         refs = extract_references_from_text(content)
         
         if refs:
-            # Create block entry
-            block = {
-                "page_number": page_num,
-                "references": {}
-            }
-            
+            # Collect all unique references for this block as a flat array
+            all_block_refs = []
             for ref_type, matches in refs.items():
                 unique_matches = list(set(matches))
-                block["references"][ref_type] = unique_matches
+                all_block_refs.extend(unique_matches)
                 
                 # Track statistics
                 for ref in unique_matches:
                     all_references.add(ref)
                     reference_type_counts[ref_type] += 1
+            
+            # Create block entry with flat references array
+            block = {
+                "block_id": f"block_{page_num}",
+                "page_number": page_num,
+                "references": sorted(list(set(all_block_refs)))  # Remove duplicates and sort
+            }
             
             reference_blocks.append(block)
     

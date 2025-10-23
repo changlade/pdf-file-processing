@@ -21,13 +21,11 @@ def optimize_references(input_path, output_path):
     reference_index = defaultdict(list)
     
     for block in data['blocks']:
-        page_num = block['page_number']
-        block_id = f"block_{page_num}"
+        block_id = block['block_id']
         
-        # Process all references in this block
-        for ref_type, refs in block['references'].items():
-            for ref in refs:
-                reference_index[ref].append(block_id)
+        # Process all references in this block (now an array)
+        for ref in block['references']:
+            reference_index[ref].append(block_id)
     
     # Add reference_index to data
     data['reference_index'] = dict(reference_index)
